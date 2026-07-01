@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Onyx | Premium Productivity</title>
     <style>
         /* ==========================================================================
@@ -11,7 +11,7 @@
         :root {
             /* Light Mode Defaults */
             --bg-color: #f4f4f5;
-            --surface-blur: rgba(255, 255, 255, 0.75);
+            --surface-blur: rgba(255, 255, 255, 0.85);
             --surface-solid: #ffffff;
             --text-primary: #09090b;
             --text-secondary: #71717a;
@@ -19,12 +19,13 @@
             --accent-color: #09090b;
             --accent-text: #ffffff;
             --accent-hover: #27272a;
+            --nav-active-bg: rgba(0, 0, 0, 0.05);
             
             --radius-sm: 8px;
-            --radius-md: 12px;
-            --radius-lg: 20px;
-            --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.04);
-            --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.06);
+            --radius-md: 14px;
+            --radius-lg: 24px;
+            --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03);
+            --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.06);
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
             
             --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -34,7 +35,7 @@
             :root {
                 /* Dark Mode Overrides */
                 --bg-color: #09090b;
-                --surface-blur: rgba(24, 24, 27, 0.75);
+                --surface-blur: rgba(24, 24, 27, 0.85);
                 --surface-solid: #18181b;
                 --text-primary: #fafafa;
                 --text-secondary: #a1a1aa;
@@ -42,8 +43,9 @@
                 --accent-color: #ffffff;
                 --accent-text: #09090b;
                 --accent-hover: #e4e4e7;
-                --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
-                --shadow-md: 0 8px 24px rgba(0, 0, 0, 0.5);
+                --nav-active-bg: rgba(255, 255, 255, 0.1);
+                --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
+                --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.5);
             }
         }
 
@@ -71,24 +73,25 @@
         .sidebar {
             width: 260px;
             background: var(--surface-blur);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            padding: 24px 16px;
-            z-index: 10;
+            padding: 32px 20px;
+            z-index: 100;
+            transition: var(--transition);
         }
 
         .main-content {
             flex: 1;
             overflow-y: auto;
-            padding: 40px 60px;
+            padding: 48px 72px;
             scroll-behavior: smooth;
         }
 
         /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
@@ -96,52 +99,55 @@
         /* ==========================================================================
            TYPOGRAPHY & UI COMPONENTS
            ========================================================================== */
-        h1, h2, h3 { font-weight: 600; letter-spacing: -0.02em; margin-bottom: 16px; }
-        h1 { font-size: 2.2rem; }
-        h2 { font-size: 1.5rem; }
+        h1, h2, h3 { font-weight: 600; letter-spacing: -0.03em; margin-bottom: 16px; }
+        h1 { font-size: 2.4rem; }
+        h2 { font-size: 1.6rem; }
         
         .logo {
-            font-size: 1.25rem;
+            font-size: 1.4rem;
             font-weight: 700;
             letter-spacing: -0.04em;
-            margin-bottom: 40px;
+            margin-bottom: 48px;
             padding: 0 12px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
         }
         
-        .logo svg { width: 20px; height: 20px; fill: currentColor; }
+        .logo svg { width: 24px; height: 24px; fill: var(--text-primary); }
 
         .nav-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
+            gap: 14px;
+            padding: 12px 16px;
             border-radius: var(--radius-sm);
             cursor: pointer;
             color: var(--text-secondary);
             transition: var(--transition);
-            margin-bottom: 4px;
+            margin-bottom: 6px;
             font-weight: 500;
         }
 
-        .nav-item svg { width: 18px; height: 18px; stroke: currentColor; stroke-width: 2; fill: none; }
-        .nav-item:hover { background: var(--border-color); color: var(--text-primary); }
-        .nav-item.active { background: var(--accent-color); color: var(--accent-text); }
+        .nav-item svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; }
+        .nav-item:hover { background: var(--nav-active-bg); color: var(--text-primary); }
+        .nav-item.active { background: var(--accent-color); color: var(--accent-text); box-shadow: var(--shadow-sm); }
 
-        .section { display: none; animation: fadeIn 0.4s ease forwards; }
+        .section { display: none; animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
         .section.active { display: block; }
         
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
+            from { opacity: 0; transform: translateY(15px); }
             to { opacity: 1; transform: translateY(0); }
         }
 
         /* Inputs & Buttons */
+        .input-group { display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
+        
         input[type="text"], input[type="date"], select, textarea {
-            width: 100%;
-            padding: 12px 16px;
+            flex: 1;
+            min-width: 200px;
+            padding: 14px 18px;
             border-radius: var(--radius-sm);
             border: 1px solid var(--border-color);
             background: var(--surface-solid);
@@ -150,66 +156,80 @@
             font-size: 0.95rem;
             transition: var(--transition);
             outline: none;
+            box-shadow: var(--shadow-sm);
+            -webkit-appearance: none; /* Removes native styling on mobile */
         }
-        input[type="text"]:focus, textarea:focus { border-color: var(--text-secondary); box-shadow: var(--shadow-sm); }
+        input[type="text"]:focus, select:focus, textarea:focus { 
+            border-color: var(--text-secondary); 
+            box-shadow: var(--shadow-md); 
+        }
         
         .btn {
             background: var(--accent-color);
             color: var(--accent-text);
             border: none;
-            padding: 10px 20px;
+            padding: 14px 24px;
             border-radius: var(--radius-sm);
-            font-weight: 500;
+            font-weight: 600;
             cursor: pointer;
             transition: var(--transition);
             font-size: 0.95rem;
+            white-space: nowrap;
+            box-shadow: var(--shadow-sm);
         }
-        .btn:hover { background: var(--accent-hover); transform: translateY(-1px); }
-        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-primary); }
-        .btn-outline:hover { background: var(--border-color); }
+        .btn:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
 
         /* Cards */
         .card {
             background: var(--surface-solid);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-md);
-            padding: 24px;
+            padding: 28px;
             box-shadow: var(--shadow-sm);
             transition: var(--transition);
         }
         .card:hover { box-shadow: var(--shadow-md); }
 
+        /* Empty States */
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-secondary);
+            border: 1px dashed var(--border-color);
+            border-radius: var(--radius-md);
+            margin-top: 24px;
+        }
+
         /* ==========================================================================
            MODULE SPECIFIC STYLES
            ========================================================================== */
         /* Dashboard */
-        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px; }
-        .stat-num { font-size: 3rem; font-weight: 700; line-height: 1; margin-bottom: 8px; letter-spacing: -0.04em; }
-        .header-meta { color: var(--text-secondary); margin-bottom: 40px; font-size: 1.1rem; }
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 40px; }
+        .stat-num { font-size: 3.5rem; font-weight: 700; line-height: 1; margin-bottom: 12px; letter-spacing: -0.05em; }
+        .header-meta { color: var(--text-secondary); margin-bottom: 48px; font-size: 1.15rem; }
 
         /* Tasks */
-        .input-group { display: flex; gap: 12px; margin-bottom: 24px; }
-        .input-group input { flex: 1; }
-        
         .list-item {
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px;
+            padding: 18px 20px;
             background: var(--surface-solid);
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
             margin-bottom: 12px;
             transition: var(--transition);
             cursor: grab;
+            box-shadow: var(--shadow-sm);
         }
-        .list-item:active { cursor: grabbing; }
-        .list-item.dragging { opacity: 0.5; border-style: dashed; }
-        .list-item-left { display: flex; align-items: center; gap: 16px; }
+        .list-item:active { cursor: grabbing; transform: scale(0.99); }
+        .list-item.dragging { opacity: 0.4; border-style: dashed; }
+        .list-item-left { display: flex; align-items: center; gap: 16px; flex: 1; overflow: hidden; }
         
         /* Custom Checkbox */
         .checkbox {
-            width: 20px; height: 20px;
+            width: 22px; height: 22px;
+            flex-shrink: 0;
             border-radius: 6px;
             border: 2px solid var(--text-secondary);
             cursor: pointer;
@@ -218,82 +238,146 @@
         }
         .checkbox.checked { background: var(--accent-color); border-color: var(--accent-color); }
         .checkbox.checked::after {
-            content: ''; width: 4px; height: 8px;
+            content: ''; width: 5px; height: 10px;
             border: solid var(--accent-text); border-width: 0 2px 2px 0;
             transform: rotate(45deg); margin-bottom: 2px;
         }
+        .task-text { font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: var(--transition); }
         .task-text.completed { text-decoration: line-through; color: var(--text-secondary); }
         
         .badge {
-            font-size: 0.75rem; padding: 4px 8px; border-radius: 12px; font-weight: 600;
-            background: var(--border-color); color: var(--text-secondary);
+            font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
+            background: var(--nav-active-bg); color: var(--text-secondary); flex-shrink: 0;
         }
         .badge.high { background: var(--text-primary); color: var(--bg-color); }
 
         .delete-btn {
             background: transparent; border: none; color: var(--text-secondary);
-            cursor: pointer; opacity: 0; transition: var(--transition); padding: 4px;
+            cursor: pointer; opacity: 0; transition: var(--transition); padding: 8px; flex-shrink: 0;
         }
-        .list-item:hover .delete-btn { opacity: 1; }
-        .delete-btn:hover { color: var(--text-primary); }
+        .list-item:hover .delete-btn, .card:hover .delete-btn { opacity: 1; }
+        .delete-btn:hover { color: var(--text-primary); transform: scale(1.1); }
 
         /* Habits */
-        .habit-grid { display: flex; flex-direction: column; gap: 12px; }
+        .habit-grid { display: flex; flex-direction: column; gap: 16px; }
         .habit-row {
-            display: grid; grid-template-columns: 2fr repeat(7, 1fr) auto; gap: 12px;
+            display: grid; grid-template-columns: minmax(150px, 2fr) auto repeat(7, 1fr) auto; gap: 16px;
             align-items: center; background: var(--surface-solid);
-            padding: 16px; border-radius: var(--radius-sm); border: 1px solid var(--border-color);
+            padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm); transition: var(--transition);
         }
-        .habit-days { display: flex; justify-content: space-between; gap: 8px; width: 100%; grid-column: 2 / 9;}
+        .habit-row:hover { box-shadow: var(--shadow-md); }
+        .habit-days { display: flex; justify-content: space-between; gap: 12px; width: 100%; grid-column: 3 / 10;}
         .habit-day-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-        .day-label { font-size: 0.75rem; color: var(--text-secondary); }
+        .day-label { font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;}
         .habit-circle {
-            width: 28px; height: 28px; border-radius: 50%; border: 2px solid var(--border-color);
-            cursor: pointer; transition: var(--transition);
+            width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-color);
+            cursor: pointer; transition: var(--transition); background: var(--bg-color);
         }
-        .habit-circle.done { background: var(--text-primary); border-color: var(--text-primary); }
-
+        .habit-circle.done { background: var(--text-primary); border-color: var(--text-primary); box-shadow: inset 0 0 0 4px var(--surface-solid); }
+        .habit-info { display: flex; flex-direction: column; gap: 4px; }
+        .habit-name { font-weight: 600; font-size: 1.05rem; }
+        
         /* Planner */
-        .timeline { margin-top: 24px; border-left: 2px solid var(--border-color); padding-left: 24px; }
-        .time-block { position: relative; margin-bottom: 32px; }
+        .timeline { margin-top: 32px; border-left: 2px solid var(--border-color); padding-left: 32px; margin-left: 16px; }
+        .time-block { position: relative; margin-bottom: 40px; }
         .time-block::before {
-            content: ''; position: absolute; left: -31px; top: 0; width: 12px; height: 12px;
-            border-radius: 50%; background: var(--surface-solid); border: 2px solid var(--text-primary);
+            content: ''; position: absolute; left: -40px; top: 2px; width: 14px; height: 14px;
+            border-radius: 50%; background: var(--bg-color); border: 3px solid var(--text-secondary);
+            transition: var(--transition);
         }
-        .time-label { font-weight: 600; margin-bottom: 8px; font-size: 0.9rem; color: var(--text-secondary); }
+        .time-block:hover::before { border-color: var(--text-primary); background: var(--text-primary); }
+        .time-label { font-weight: 700; margin-bottom: 8px; font-size: 0.95rem; color: var(--text-secondary); letter-spacing: 0.05em; }
         .time-input {
-            width: 100%; border: none; background: transparent; font-size: 1rem;
-            color: var(--text-primary); outline: none; border-bottom: 1px dashed var(--border-color); padding-bottom: 4px;
+            width: 100%; border: none; background: transparent; font-size: 1.1rem;
+            color: var(--text-primary); outline: none; border-bottom: 1px dashed var(--border-color); padding-bottom: 8px;
+            transition: var(--transition); box-shadow: none; border-radius: 0; padding-left: 0;
         }
-        .time-input:focus { border-bottom-style: solid; }
+        .time-input:focus { border-bottom-style: solid; border-bottom-color: var(--text-primary); }
 
         /* Goals */
-        .progress-wrapper { width: 100%; height: 8px; background: var(--border-color); border-radius: 4px; margin-top: 12px; overflow: hidden; cursor: pointer;}
-        .progress-bar { height: 100%; background: var(--accent-color); transition: width 0.3s ease; }
-        .goal-meta { display: flex; justify-content: space-between; font-size: 0.85rem; color: var(--text-secondary); margin-top: 8px; }
+        .progress-wrapper { width: 100%; height: 10px; background: var(--border-color); border-radius: 5px; margin-top: 16px; overflow: hidden; cursor: pointer;}
+        .progress-bar { height: 100%; background: var(--accent-color); transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); }
+        .goal-meta { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-secondary); margin-top: 12px; font-weight: 500;}
 
         /* Notes */
-        .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
         .note-card {
             background: var(--surface-solid); border: 1px solid var(--border-color);
-            border-radius: var(--radius-md); padding: 20px; display: flex; flex-direction: column;
+            border-radius: var(--radius-md); padding: 24px; display: flex; flex-direction: column;
+            box-shadow: var(--shadow-sm); transition: var(--transition);
         }
+        .note-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
         .note-card textarea {
-            border: none; background: transparent; resize: none; min-height: 150px;
+            border: none; background: transparent; resize: none; min-height: 180px;
             padding: 0; outline: none; color: var(--text-primary); margin-bottom: 16px;
+            font-size: 1.05rem; line-height: 1.6; box-shadow: none;
         }
-        .note-footer { display: flex; justify-content: space-between; font-size: 0.8rem; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 12px;}
+        .note-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 16px;}
 
-        /* Responsive */
+        /* ==========================================================================
+           RESPONSIVE DESIGN (Mobile & Tablet)
+           ========================================================================== */
+        @media (max-width: 1024px) {
+            .main-content { padding: 40px; }
+            .habit-row { grid-template-columns: 1fr; gap: 20px; }
+            .habit-days { grid-column: 1; grid-row: 2; margin-top: 8px; justify-content: space-around; }
+            .habit-row .delete-btn { position: absolute; top: 16px; right: 16px; }
+            .habit-row { position: relative; }
+            .habit-info { margin-right: 40px; }
+        }
+
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            .sidebar { width: 100%; padding: 16px; border-right: none; border-bottom: 1px solid var(--border-color); flex-direction: row; flex-wrap: wrap; justify-content: center; z-index: 100;}
-            .logo { width: 100%; justify-content: center; margin-bottom: 16px; }
-            .nav-item { padding: 8px; font-size: 0.9rem; }
-            .nav-item span { display: none; } /* Icon only on mobile */
-            .main-content { padding: 24px 16px; }
-            .habit-row { grid-template-columns: 1fr; }
-            .habit-days { grid-column: 1; margin-top: 12px; }
+            
+            /* Bottom Navigation for Mobile */
+            .sidebar { 
+                width: 100%; 
+                height: 80px; 
+                padding: 0 16px; 
+                border-right: none; 
+                border-top: 1px solid var(--border-color); 
+                flex-direction: row; 
+                align-items: center;
+                justify-content: space-between; 
+                position: fixed; 
+                bottom: 0; 
+                left: 0;
+                background: var(--surface-blur);
+                padding-bottom: env(safe-area-inset-bottom); /* iOS support */
+            }
+            .logo { display: none; } /* Hide logo on mobile bottom nav */
+            nav { display: flex; width: 100%; justify-content: space-between; align-items: center; }
+            
+            .nav-item { 
+                flex-direction: column; 
+                gap: 4px; 
+                padding: 10px; 
+                margin-bottom: 0;
+                font-size: 0.7rem;
+                flex: 1;
+                text-align: center;
+                border-radius: var(--radius-md);
+            }
+            .nav-item svg { width: 22px; height: 22px; }
+            .nav-item.active { background: transparent; color: var(--text-primary); box-shadow: none; }
+            .nav-item.active svg { stroke: var(--text-primary); stroke-width: 2.5; }
+            .nav-item.active span { font-weight: 700; }
+
+            .main-content { padding: 32px 24px 100px 24px; } /* Extra bottom padding for fixed nav */
+            
+            h1 { font-size: 2rem; }
+            .stat-num { font-size: 2.5rem; }
+            .grid-3 { grid-template-columns: 1fr; gap: 16px; }
+            
+            .input-group { flex-direction: column; }
+            .input-group input, .input-group select, .input-group button { width: 100%; }
+            
+            .list-item { padding: 16px; }
+            .delete-btn { opacity: 1; } /* Always show delete buttons on mobile */
+            
+            .timeline { margin-left: 8px; padding-left: 24px; }
+            .time-block::before { left: -32px; }
         }
     </style>
 </head>
@@ -311,15 +395,15 @@
             </div>
             <div class="nav-item" data-target="habits">
                 <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
-                <span>Habit Tracker</span>
+                <span>Habits</span>
             </div>
             <div class="nav-item" data-target="tasks">
                 <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
-                <span>To-Do List</span>
+                <span>Tasks</span>
             </div>
             <div class="nav-item" data-target="planner">
                 <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                <span>Daily Planner</span>
+                <span>Planner</span>
             </div>
             <div class="nav-item" data-target="goals">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
@@ -336,38 +420,46 @@
         
         <section id="dashboard" class="section active">
             <h1 id="dash-greeting">Good Morning.</h1>
-            <p class="header-meta" id="dash-date">Monday, January 1</p>
+            <p class="header-meta" id="dash-date">Loading date...</p>
             
             <div class="grid-3">
                 <div class="card">
-                    <h3 style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 24px;">Tasks Today</h3>
+                    <h3 style="color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 24px;">Tasks Today</h3>
                     <div class="stat-num" id="stat-tasks">0/0</div>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Completed</p>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Completed</p>
                 </div>
                 <div class="card">
-                    <h3 style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 24px;">Active Habits</h3>
+                    <h3 style="color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 24px;">Active Habits</h3>
                     <div class="stat-num" id="stat-habits">0</div>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">On Track</p>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Tracked Routines</p>
                 </div>
                 <div class="card">
-                    <h3 style="color: var(--text-secondary); font-size: 1rem; margin-bottom: 24px;">Goals Progress</h3>
+                    <h3 style="color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 24px;">Goals Progress</h3>
                     <div class="stat-num" id="stat-goals">0%</div>
-                    <p style="color: var(--text-secondary); font-size: 0.9rem;">Average Completion</p>
+                    <p style="color: var(--text-secondary); font-size: 0.95rem;">Average Completion</p>
                 </div>
             </div>
 
-            <h2>Weekly Overview</h2>
-            <div class="card" style="min-height: 200px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
-                <p>Keep logging data to build your visual progress chart.</p>
+            <h2>Quick Action</h2>
+            <div class="card" style="display: flex; align-items: center; justify-content: center; padding: 40px; text-align: center;">
+                <div>
+                    <h3 style="margin-bottom: 8px;">Focus Session</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">Eliminate distractions and execute your planner.</p>
+                    <button class="btn btn-outline" style="border: 1px solid var(--border-color); background: transparent; color: var(--text-primary);" onclick="document.querySelector('[data-target=\\'planner\\']').click()">Open Daily Planner</button>
+                </div>
             </div>
         </section>
 
         <section id="habits" class="section">
             <h1>Habit Tracker</h1>
-            <p class="header-meta">Build consistency through daily repetition.</p>
+            <p class="header-meta">Build consistency through strategic repetition.</p>
             
             <div class="input-group">
-                <input type="text" id="habit-input" placeholder="e.g., Read 30 pages, Meditate...">
+                <input type="text" id="habit-input" placeholder="e.g., Read 30 pages, Gym...">
+                <select id="habit-frequency">
+                    <option value="Daily">Daily Routine</option>
+                    <option value="Weekly">Weekly Goal</option>
+                </select>
                 <button class="btn" onclick="HabitsModule.addHabit()">Add Habit</button>
             </div>
             
@@ -381,12 +473,12 @@
 
             <div class="input-group">
                 <input type="text" id="task-input" placeholder="What needs to be done?" onkeypress="if(event.key === 'Enter') TasksModule.addTask()">
-                <select id="task-priority" style="width: auto;">
+                <select id="task-priority" style="max-width: 150px;">
                     <option value="Normal">Normal</option>
                     <option value="High">High</option>
                     <option value="Low">Low</option>
                 </select>
-                <button class="btn" onclick="TasksModule.addTask()">Add</button>
+                <button class="btn" onclick="TasksModule.addTask()">Add Task</button>
             </div>
 
             <div id="task-list">
@@ -407,7 +499,7 @@
 
             <div class="input-group">
                 <input type="text" id="goal-input" placeholder="Define a new goal...">
-                <input type="date" id="goal-date" style="width: auto;">
+                <input type="date" id="goal-date" style="max-width: 200px;">
                 <button class="btn" onclick="GoalsModule.addGoal()">Set Goal</button>
             </div>
 
@@ -420,7 +512,7 @@
             <p class="header-meta">Capture thoughts, reflections, and information.</p>
 
             <div class="input-group">
-                <button class="btn" onclick="NotesModule.addNote()">+ New Note</button>
+                <button class="btn" onclick="NotesModule.addNote()">+ Create New Note</button>
             </div>
 
             <div class="notes-grid" id="notes-list">
@@ -436,31 +528,32 @@
         const Store = {
             data: {
                 tasks: [],
-                habits: [],
+                habits: [], // Schema: { id, name, frequency: 'Daily'|'Weekly', history: {} }
                 goals: [],
                 notes: [],
-                planner: {} // { "08:00": "Deep work" }
+                planner: {}
             },
             
             init() {
-                const saved = localStorage.getItem('onyx_data');
+                const saved = localStorage.getItem('onyx_data_v2'); // New key for updated schema
                 if (saved) {
                     this.data = JSON.parse(saved);
                 } else {
-                    // Seed some initial data for new users
+                    // Seed initial data
                     this.data.tasks = [
-                        { id: Date.now(), text: "Explore Onyx interface", completed: false, priority: "High" }
+                        { id: Date.now(), text: "Explore Onyx interface on Mobile & Desktop", completed: false, priority: "High" }
                     ];
                     this.data.habits = [
-                        { id: Date.now()+1, name: "Drink Water", history: {} }
+                        { id: Date.now()+1, name: "Drink 2L Water", frequency: "Daily", history: {} },
+                        { id: Date.now()+2, name: "Deep Work Session", frequency: "Weekly", history: {} }
                     ];
                     this.save();
                 }
             },
 
             save() {
-                localStorage.setItem('onyx_data', JSON.stringify(this.data));
-                DashboardModule.update(); // Always update dashboard on data change
+                localStorage.setItem('onyx_data_v2', JSON.stringify(this.data));
+                DashboardModule.update();
             }
         };
 
@@ -469,21 +562,21 @@
          */
         const UI = {
             init() {
-                // Tab Switching
+                // Tab Switching Logic
                 document.querySelectorAll('.nav-item').forEach(item => {
-                    item.addEventListener('click', (e) => {
-                        // Remove active class from navs
+                    item.addEventListener('click', () => {
                         document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
                         item.classList.add('active');
                         
-                        // Hide all sections, show target
                         const targetId = item.getAttribute('data-target');
                         document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
                         document.getElementById(targetId).classList.add('active');
+                        
+                        // Scroll to top on mobile tab switch
+                        document.querySelector('.main-content').scrollTop = 0;
                     });
                 });
 
-                // Update Clock/Greeting
                 this.updateTime();
                 setInterval(() => this.updateTime(), 60000);
             },
@@ -498,11 +591,12 @@
                 
                 document.getElementById('dash-greeting').textContent = `${greeting}.`;
                 
-                const options = { weekday: 'long', month: 'long', day: 'numeric', hour: 'numeric', minute: '2-digit' };
+                const options = { weekday: 'long', month: 'long', day: 'numeric' };
                 document.getElementById('dash-date').textContent = now.toLocaleDateString('en-US', options);
             },
 
             escapeHTML(str) {
+                if(!str) return '';
                 return str.replace(/[&<>'"]/g, tag => ({
                     '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
                 }[tag]));
@@ -514,15 +608,12 @@
          */
         const DashboardModule = {
             update() {
-                // Tasks Stat
                 const totalTasks = Store.data.tasks.length;
                 const completedTasks = Store.data.tasks.filter(t => t.completed).length;
                 document.getElementById('stat-tasks').textContent = `${completedTasks}/${totalTasks}`;
 
-                // Habits Stat
                 document.getElementById('stat-habits').textContent = Store.data.habits.length;
 
-                // Goals Stat
                 if (Store.data.goals.length === 0) {
                     document.getElementById('stat-goals').textContent = '0%';
                 } else {
@@ -538,9 +629,7 @@
         const TasksModule = {
             draggedItem: null,
 
-            init() {
-                this.render();
-            },
+            init() { this.render(); },
 
             addTask() {
                 const input = document.getElementById('task-input');
@@ -549,10 +638,7 @@
                 
                 if (text) {
                     Store.data.tasks.unshift({
-                        id: Date.now(),
-                        text: text,
-                        completed: false,
-                        priority: priority
+                        id: Date.now(), text: text, completed: false, priority: priority
                     });
                     Store.save();
                     input.value = '';
@@ -579,11 +665,15 @@
                 const list = document.getElementById('task-list');
                 list.innerHTML = '';
                 
+                if(Store.data.tasks.length === 0) {
+                    list.innerHTML = '<div class="empty-state">No tasks remaining. You are all caught up!</div>';
+                    return;
+                }
+                
                 Store.data.tasks.forEach((task, index) => {
                     const el = document.createElement('div');
                     el.className = 'list-item';
                     el.draggable = true;
-                    el.dataset.index = index;
                     
                     const pClass = task.priority === 'High' ? 'badge high' : 'badge';
                     const checkedClass = task.completed ? 'checked' : '';
@@ -592,37 +682,24 @@
                     el.innerHTML = `
                         <div class="list-item-left">
                             <div class="checkbox ${checkedClass}" onclick="TasksModule.toggle(${task.id})"></div>
-                            <span class="task-text ${textClass}">${UI.escapeHTML(task.text)}</span>
-                            <span class="${pClass}">${task.priority}</span>
+                            <span class="task-text ${textClass}" title="${UI.escapeHTML(task.text)}">${UI.escapeHTML(task.text)}</span>
                         </div>
+                        <span class="${pClass}" style="margin: 0 16px;">${task.priority}</span>
                         <button class="delete-btn" onclick="TasksModule.delete(${task.id})">
-                            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     `;
 
-                    // Drag and Drop Events
-                    el.addEventListener('dragstart', (e) => {
-                        this.draggedItem = task;
-                        setTimeout(() => el.classList.add('dragging'), 0);
-                    });
-                    
-                    el.addEventListener('dragend', () => {
-                        el.classList.remove('dragging');
-                        this.draggedItem = null;
-                    });
-                    
-                    el.addEventListener('dragover', (e) => {
-                        e.preventDefault();
-                    });
-                    
+                    // Drag & Drop
+                    el.addEventListener('dragstart', () => { this.draggedItem = task; setTimeout(() => el.classList.add('dragging'), 0); });
+                    el.addEventListener('dragend', () => { el.classList.remove('dragging'); this.draggedItem = null; });
+                    el.addEventListener('dragover', (e) => e.preventDefault());
                     el.addEventListener('drop', (e) => {
                         e.preventDefault();
                         if (this.draggedItem && this.draggedItem.id !== task.id) {
                             const oldIdx = Store.data.tasks.findIndex(t => t.id === this.draggedItem.id);
-                            const newIdx = index;
-                            // Swap in array
                             Store.data.tasks.splice(oldIdx, 1);
-                            Store.data.tasks.splice(newIdx, 0, this.draggedItem);
+                            Store.data.tasks.splice(index, 0, this.draggedItem);
                             Store.save();
                             this.render();
                         }
@@ -634,22 +711,19 @@
         };
 
         /**
-         * Habits Module
+         * Habits Module (Updated for Daily/Weekly)
          */
         const HabitsModule = {
-            init() {
-                this.render();
-            },
+            init() { this.render(); },
 
             addHabit() {
                 const input = document.getElementById('habit-input');
+                const freq = document.getElementById('habit-frequency').value;
                 const name = input.value.trim();
                 
                 if (name) {
                     Store.data.habits.push({
-                        id: Date.now(),
-                        name: name,
-                        history: {} // e.g. { "2023-10-25": true }
+                        id: Date.now(), name: name, frequency: freq, history: {}
                     });
                     Store.save();
                     input.value = '';
@@ -679,7 +753,8 @@
                     d.setDate(d.getDate() - i);
                     days.push({
                         str: d.toISOString().split('T')[0],
-                        label: d.toLocaleDateString('en-US', { weekday: 'short' })
+                        label: d.toLocaleDateString('en-US', { weekday: 'short' }),
+                        dayNum: d.getDate()
                     });
                 }
                 return days;
@@ -688,42 +763,38 @@
             render() {
                 const list = document.getElementById('habit-list');
                 list.innerHTML = '';
-                const days = this.getPast7Days();
-
-                // Generate Header Row for Desktop
-                if(Store.data.habits.length > 0) {
-                     const header = document.createElement('div');
-                     header.className = 'habit-row';
-                     header.style.background = 'transparent';
-                     header.style.border = 'none';
-                     header.style.padding = '0 16px';
-                     
-                     let daysHTML = days.map(d => `<span class="day-label" style="width: 28px; text-align: center;">${d.label.charAt(0)}</span>`).join('');
-                     header.innerHTML = `
-                        <div style="font-weight: 600; color: var(--text-secondary);">Habit</div>
-                        <div class="habit-days">${daysHTML}</div>
-                        <div style="width:24px"></div>
-                     `;
-                     list.appendChild(header);
+                
+                if(Store.data.habits.length === 0) {
+                    list.innerHTML = '<div class="empty-state">No habits configured. Start building your routine.</div>';
+                    return;
                 }
 
+                const days = this.getPast7Days();
+
+                // Group Habits visually (optional, currently just lists them with badges)
                 Store.data.habits.forEach(habit => {
                     const el = document.createElement('div');
                     el.className = 'habit-row';
+                    
+                    const freqClass = habit.frequency === 'Daily' ? '' : 'high'; // Use dark badge for weekly
                     
                     let circlesHTML = days.map(d => {
                         const isDone = habit.history[d.str];
                         return `
                         <div class="habit-day-col">
+                            <span class="day-label" style="opacity:0.5; margin-bottom: 4px;">${d.label.charAt(0)}</span>
                             <div class="habit-circle ${isDone ? 'done' : ''}" onclick="HabitsModule.toggleDay(${habit.id}, '${d.str}')"></div>
                         </div>`;
                     }).join('');
 
                     el.innerHTML = `
-                        <div style="font-weight: 500;">${UI.escapeHTML(habit.name)}</div>
+                        <div class="habit-info">
+                            <div class="habit-name">${UI.escapeHTML(habit.name)}</div>
+                            <div><span class="badge ${freqClass}">${habit.frequency || 'Daily'}</span></div>
+                        </div>
                         <div class="habit-days">${circlesHTML}</div>
-                        <button class="delete-btn" onclick="HabitsModule.deleteHabit(${habit.id})" style="justify-self: end;">
-                            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline></svg>
+                        <button class="delete-btn" onclick="HabitsModule.deleteHabit(${habit.id})">
+                            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                         </button>
                     `;
                     list.appendChild(el);
@@ -735,9 +806,7 @@
          * Planner Module
          */
         const PlannerModule = {
-            init() {
-                this.render();
-            },
+            init() { this.render(); },
 
             updateBlock(time, text) {
                 Store.data.planner[time] = text;
@@ -748,7 +817,6 @@
                 const container = document.getElementById('timeline-container');
                 container.innerHTML = '';
                 
-                // 6 AM to 10 PM
                 for(let i=6; i<=22; i++) {
                     const timeStr = `${i.toString().padStart(2, '0')}:00`;
                     const ampm = i >= 12 ? 'PM' : 'AM';
@@ -761,7 +829,7 @@
                     el.className = 'time-block';
                     el.innerHTML = `
                         <div class="time-label">${displayTime}</div>
-                        <input type="text" class="time-input" value="${UI.escapeHTML(val)}" placeholder="Plan..." onblur="PlannerModule.updateBlock('${timeStr}', this.value)">
+                        <input type="text" class="time-input" value="${UI.escapeHTML(val)}" placeholder="Tap to plan..." onblur="PlannerModule.updateBlock('${timeStr}', this.value)">
                     `;
                     container.appendChild(el);
                 }
@@ -772,23 +840,17 @@
          * Goals Module
          */
         const GoalsModule = {
-            init() {
-                this.render();
-            },
+            init() { this.render(); },
 
             addGoal() {
                 const input = document.getElementById('goal-input');
                 const date = document.getElementById('goal-date');
                 if (input.value.trim()) {
                     Store.data.goals.push({
-                        id: Date.now(),
-                        text: input.value.trim(),
-                        targetDate: date.value,
-                        progress: 0
+                        id: Date.now(), text: input.value.trim(), targetDate: date.value, progress: 0
                     });
                     Store.save();
-                    input.value = '';
-                    date.value = '';
+                    input.value = ''; date.value = '';
                     this.render();
                 }
             },
@@ -796,7 +858,7 @@
             incrementProgress(id) {
                 const goal = Store.data.goals.find(g => g.id === id);
                 if (goal) {
-                    goal.progress += 10;
+                    goal.progress += 20;
                     if (goal.progress > 100) goal.progress = 0;
                     Store.save();
                     this.render();
@@ -814,23 +876,30 @@
                 const list = document.getElementById('goal-list');
                 list.innerHTML = '';
                 
+                if(Store.data.goals.length === 0) {
+                    list.style.display = 'block';
+                    list.innerHTML = '<div class="empty-state">No long-term goals set. Define your targets above.</div>';
+                    return;
+                }
+                list.style.display = 'grid'; // Reset display if not empty
+                
                 Store.data.goals.forEach(goal => {
                     const el = document.createElement('div');
                     el.className = 'card';
                     
-                    const dateStr = goal.targetDate ? new Date(goal.targetDate).toLocaleDateString() : 'No date';
+                    const dateStr = goal.targetDate ? new Date(goal.targetDate).toLocaleDateString(undefined, {month:'short', day:'numeric', year:'numeric'}) : 'No date set';
                     
                     el.innerHTML = `
                         <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <h3 style="margin: 0; font-size: 1.1rem;">${UI.escapeHTML(goal.text)}</h3>
-                            <button class="delete-btn" onclick="GoalsModule.deleteGoal(${goal.id}, event)"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline></svg></button>
+                            <h3 style="margin: 0; font-size: 1.15rem; max-width: 80%;">${UI.escapeHTML(goal.text)}</h3>
+                            <button class="delete-btn" onclick="GoalsModule.deleteGoal(${goal.id}, event)" style="padding:0;"><svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg></button>
                         </div>
-                        <div class="progress-wrapper" onclick="GoalsModule.incrementProgress(${goal.id})">
+                        <div class="progress-wrapper" onclick="GoalsModule.incrementProgress(${goal.id})" title="Click to increment progress">
                             <div class="progress-bar" style="width: ${goal.progress}%;"></div>
                         </div>
                         <div class="goal-meta">
                             <span>Target: ${dateStr}</span>
-                            <span style="color: var(--text-primary); font-weight: 600;">${goal.progress}%</span>
+                            <span style="color: var(--text-primary); font-weight: 700;">${goal.progress}%</span>
                         </div>
                     `;
                     list.appendChild(el);
@@ -842,26 +911,21 @@
          * Notes Module
          */
         const NotesModule = {
-            init() {
-                this.render();
-            },
+            init() { this.render(); },
 
             addNote() {
-                Store.data.notes.unshift({
-                    id: Date.now(),
-                    text: '',
-                    updated: Date.now()
-                });
+                Store.data.notes.unshift({ id: Date.now(), text: '', updated: Date.now() });
                 Store.save();
                 this.render();
             },
 
             updateNote(id, text) {
                 const note = Store.data.notes.find(n => n.id === id);
-                if (note) {
+                if (note && note.text !== text) {
                     note.text = text;
                     note.updated = Date.now();
                     Store.save();
+                    this.render(); // Re-render to update the timestamp
                 }
             },
 
@@ -875,17 +939,26 @@
                 const list = document.getElementById('notes-list');
                 list.innerHTML = '';
                 
+                if(Store.data.notes.length === 0) {
+                    list.style.display = 'block';
+                    list.innerHTML = '<div class="empty-state">Your workspace is empty. Create a new note to start capturing ideas.</div>';
+                    return;
+                }
+                list.style.display = 'grid';
+
                 Store.data.notes.forEach(note => {
                     const el = document.createElement('div');
                     el.className = 'note-card';
                     
-                    const dateStr = new Date(note.updated).toLocaleDateString();
+                    const dateStr = new Date(note.updated).toLocaleDateString(undefined, {month:'short', day:'numeric', hour:'2-digit', minute:'2-digit'});
                     
                     el.innerHTML = `
-                        <textarea placeholder="Start typing..." onblur="NotesModule.updateNote(${note.id}, this.value)">${UI.escapeHTML(note.text)}</textarea>
+                        <textarea placeholder="Start typing your thoughts..." onblur="NotesModule.updateNote(${note.id}, this.value)">${UI.escapeHTML(note.text)}</textarea>
                         <div class="note-footer">
-                            <span>Last edited: ${dateStr}</span>
-                            <button class="delete-btn" style="opacity: 1;" onclick="NotesModule.deleteNote(${note.id})">Delete</button>
+                            <span>Edited: ${dateStr}</span>
+                            <button class="delete-btn" style="opacity: 1; padding:0;" onclick="NotesModule.deleteNote(${note.id})">
+                                <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
                         </div>
                     `;
                     list.appendChild(el);
