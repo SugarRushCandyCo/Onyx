@@ -7,7 +7,7 @@
 
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
-    
+
     <style>
         /* ==========================================================================
            CSS VARIABLES & RESET (Minimalist Grayscale Theme)
@@ -24,14 +24,16 @@
             --accent-text: #ffffff;
             --accent-hover: #27272a;
             --nav-active-bg: rgba(0, 0, 0, 0.05);
-            
+            --danger-color: #dc2626;
+
             --radius-sm: 8px;
             --radius-md: 14px;
             --radius-lg: 24px;
             --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.03);
             --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.06);
             --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-            
+            --spring: all 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+
             --font-stack: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
 
@@ -48,6 +50,7 @@
                 --accent-text: #09090b;
                 --accent-hover: #e4e4e7;
                 --nav-active-bg: rgba(255, 255, 255, 0.1);
+                --danger-color: #f87171;
                 --shadow-sm: 0 4px 12px rgba(0, 0, 0, 0.3);
                 --shadow-md: 0 12px 32px rgba(0, 0, 0, 0.5);
             }
@@ -59,16 +62,34 @@
             padding: 0;
         }
 
+        html {
+            /* Prevents iOS text auto-resize on rotate, keeps layout stable */
+            -webkit-text-size-adjust: 100%;
+        }
+
         body {
             font-family: var(--font-stack);
             background-color: var(--bg-color);
             color: var(--text-primary);
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
             display: flex;
             height: 100vh;
+            height: 100dvh;
             overflow: hidden;
             font-size: 15px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Respect reduced motion globally as a baseline; specific overrides below */
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+                scroll-behavior: auto !important;
+            }
         }
 
         /* ==========================================================================
@@ -77,21 +98,25 @@
         .sidebar {
             width: 260px;
             background: var(--surface-blur);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
+            backdrop-filter: blur(24px) saturate(180%);
+            -webkit-backdrop-filter: blur(24px) saturate(180%);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             padding: 32px 20px;
             z-index: 100;
             transition: var(--transition);
+            flex-shrink: 0;
         }
 
         .main-content {
             flex: 1;
             overflow-y: auto;
+            overflow-x: hidden;
             padding: 48px 72px;
             scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            overscroll-behavior-y: contain;
         }
 
         /* Scrollbar */
@@ -105,8 +130,8 @@
            ========================================================================== */
         h1, h2, h3 { font-weight: 600; letter-spacing: -0.03em; margin-bottom: 16px; }
         h1 { font-size: 2.4rem; }
-        h2 { font-size: 1.6rem; }
-        
+        h2 { font-size: 1.6rem; margin-top: 8px; }
+
         .logo {
             font-size: 1.4rem;
             font-weight: 700;
@@ -117,11 +142,11 @@
             align-items: center;
             gap: 12px;
         }
-        
+
         .logo svg { width: 24px; height: 24px; fill: var(--text-primary); }
 
         /* APPLE LIQUID GLASS NAVIGATION ENHANCEMENTS
-           Replaces standard static hover/active states with spring physics and sliding indicators. 
+           Replaces standard static hover/active states with spring physics and sliding indicators.
         */
         nav {
             position: relative;
@@ -140,10 +165,11 @@
             box-shadow: var(--shadow-sm);
             pointer-events: none; /* Never blocks clicks */
             will-change: transform, width, height;
+            opacity: 0;
             /* Premium spring-like easing for fluid movement */
-            transition: transform 0.4s cubic-bezier(0.25, 1, 0.3, 1), 
-                        width 0.4s cubic-bezier(0.25, 1, 0.3, 1), 
-                        height 0.4s cubic-bezier(0.25, 1, 0.3, 1),
+            transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                        width 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+                        height 0.45s cubic-bezier(0.22, 1, 0.36, 1),
                         opacity 0.3s ease;
             /* Subtle glass edge reflection */
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -165,18 +191,20 @@
             margin-bottom: 6px;
             transform-origin: center;
             will-change: transform;
+            touch-action: manipulation;
+            user-select: none;
             /* Soft transitions for color and scaling */
-            transition: transform 0.25s cubic-bezier(0.25, 1, 0.5, 1), 
-                        color 0.3s ease, 
+            transition: transform 0.2s cubic-bezier(0.25, 1, 0.5, 1),
+                        color 0.3s ease,
                         opacity 0.3s ease;
         }
 
-        .nav-item svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; transition: transform 0.3s ease; }
+        .nav-item svg { width: 20px; height: 20px; stroke: currentColor; stroke-width: 2; fill: none; transition: transform 0.3s ease; flex-shrink: 0; }
 
         /* Desktop Hover Effects */
-        @media (hover: hover) {
-            .nav-item:hover { 
-                color: var(--text-primary); 
+        @media (hover: hover) and (pointer: fine) {
+            .nav-item:hover {
+                color: var(--text-primary);
                 transform: scale(0.98); /* Organic softness */
             }
             /* Transparent ghost background on hover (doesn't conflict with active pill) */
@@ -194,17 +222,18 @@
             .nav-item.active:hover::before { opacity: 0; }
         }
 
-        /* Touch Feedback */
+        /* Touch / Click Feedback (instant, no delay) */
         .nav-item:active {
             transform: scale(0.94);
             opacity: 0.8;
+            transition: transform 0.1s ease, opacity 0.1s ease;
         }
 
         /* Active State (Background visuals are now entirely handled by .nav-indicator) */
-        .nav-item.active { 
-            background: transparent; 
-            color: var(--accent-text); 
-            box-shadow: none; 
+        .nav-item.active {
+            background: transparent;
+            color: var(--accent-text);
+            box-shadow: none;
         }
 
         /* Accessibility: Keyboard Focus */
@@ -213,23 +242,29 @@
             outline-offset: 2px;
         }
 
-        /* Accessibility: Reduced Motion */
-        @media (prefers-reduced-motion: reduce) {
-            .nav-item { transition: color 0.3s ease; transform: none !important; }
-            .nav-indicator { transition: opacity 0.3s ease; }
+        .section { display: none; }
+        .section.active {
+            display: block;
+            animation: fadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
 
-        .section { display: none; animation: fadeIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-        .section.active { display: block; }
-        
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
+            from { opacity: 0; transform: translateY(12px); }
             to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.92) translateY(-6px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            .section.active { animation: none; }
         }
 
         /* Inputs & Buttons */
         .input-group { display: flex; gap: 12px; margin-bottom: 32px; flex-wrap: wrap; }
-        
+
         input[type="text"], input[type="date"], select, textarea {
             flex: 1;
             min-width: 200px;
@@ -244,12 +279,17 @@
             outline: none;
             box-shadow: var(--shadow-sm);
             -webkit-appearance: none;
+            touch-action: manipulation;
         }
-        input[type="text"]:focus, select:focus, textarea:focus { 
-            border-color: var(--text-secondary); 
-            box-shadow: var(--shadow-md); 
+        input[type="text"]:focus, select:focus, textarea:focus, input[type="date"]:focus {
+            border-color: var(--text-secondary);
+            box-shadow: var(--shadow-md);
         }
-        
+        input[type="text"]:focus-visible, select:focus-visible, textarea:focus-visible, input[type="date"]:focus-visible {
+            outline: 2px solid var(--text-primary);
+            outline-offset: 1px;
+        }
+
         .btn {
             background: var(--accent-color);
             color: var(--accent-text);
@@ -262,8 +302,16 @@
             font-size: 0.95rem;
             white-space: nowrap;
             box-shadow: var(--shadow-sm);
+            touch-action: manipulation;
+            min-height: 48px;
         }
-        .btn:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        @media (hover: hover) and (pointer: fine) {
+            .btn:hover { background: var(--accent-hover); transform: translateY(-2px); box-shadow: var(--shadow-md); }
+        }
+        .btn:active { transform: translateY(0) scale(0.97); box-shadow: var(--shadow-sm); transition: transform 0.1s ease; }
+        .btn:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
+        .btn:disabled { opacity: 0.5; cursor: default; pointer-events: none; }
+        .btn-outline { border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); box-shadow: none; }
 
         /* Cards */
         .card {
@@ -272,9 +320,11 @@
             border-radius: var(--radius-md);
             padding: 28px;
             box-shadow: var(--shadow-sm);
-            transition: var(--transition);
+            transition: var(--spring);
         }
-        .card:hover { box-shadow: var(--shadow-md); }
+        @media (hover: hover) and (pointer: fine) {
+            .card:hover { box-shadow: var(--shadow-md); }
+        }
 
         /* Empty States */
         .empty-state {
@@ -284,6 +334,7 @@
             border: 1px dashed var(--border-color);
             border-radius: var(--radius-md);
             margin-top: 24px;
+            animation: fadeIn 0.4s ease forwards;
         }
 
         /* ==========================================================================
@@ -291,7 +342,7 @@
            ========================================================================== */
         /* Dashboard */
         .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 24px; margin-bottom: 40px; }
-        .stat-num { font-size: 3.5rem; font-weight: 700; line-height: 1; margin-bottom: 12px; letter-spacing: -0.05em; }
+        .stat-num { font-size: 3.5rem; font-weight: 700; line-height: 1; margin-bottom: 12px; letter-spacing: -0.05em; font-variant-numeric: tabular-nums; transition: var(--spring); }
         .header-meta { color: var(--text-secondary); margin-bottom: 48px; font-size: 1.15rem; }
 
         /* Tasks */
@@ -304,16 +355,19 @@
             border: 1px solid var(--border-color);
             border-radius: var(--radius-sm);
             margin-bottom: 12px;
-            transition: var(--transition);
-            cursor: grab;
+            transition: var(--spring), height 0.35s ease, padding 0.35s ease, margin 0.35s ease;
             box-shadow: var(--shadow-sm);
+            overflow: hidden;
+            animation: popIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
-        .list-item:active { cursor: grabbing; transform: scale(0.99); }
-        .list-item.dragging { opacity: 0.4; border-style: dashed; }
+        @media (hover: hover) and (pointer: fine) {
+            .list-item:hover { box-shadow: var(--shadow-md); }
+        }
         .list-item-left { display: flex; align-items: center; gap: 16px; flex: 1; overflow: hidden; }
-        
-        /* Custom Checkbox */
+
+        /* Custom Checkbox (with invisible 44px hit-area for touch) */
         .checkbox {
+            position: relative;
             width: 22px; height: 22px;
             flex-shrink: 0;
             border-radius: 6px;
@@ -321,28 +375,44 @@
             cursor: pointer;
             display: flex; align-items: center; justify-content: center;
             transition: var(--transition);
+            touch-action: manipulation;
         }
+        .checkbox::before {
+            content: '';
+            position: absolute;
+            inset: -12px; /* expands tappable area to ~46px without changing visuals */
+        }
+        .checkbox:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
         .checkbox.checked { background: var(--accent-color); border-color: var(--accent-color); }
         .checkbox.checked::after {
             content: ''; width: 5px; height: 10px;
             border: solid var(--accent-text); border-width: 0 2px 2px 0;
             transform: rotate(45deg); margin-bottom: 2px;
+            animation: popIn 0.25s ease forwards;
         }
         .task-text { font-size: 1.05rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; transition: var(--transition); }
         .task-text.completed { text-decoration: line-through; color: var(--text-secondary); }
-        
+
         .badge {
             font-size: 0.75rem; padding: 4px 10px; border-radius: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;
             background: var(--nav-active-bg); color: var(--text-secondary); flex-shrink: 0;
         }
         .badge.high { background: var(--text-primary); color: var(--bg-color); }
+        .badge.low { opacity: 0.7; }
 
         .delete-btn {
             background: transparent; border: none; color: var(--text-secondary);
-            cursor: pointer; opacity: 0; transition: var(--transition); padding: 8px; flex-shrink: 0;
+            cursor: pointer; opacity: 0; transition: var(--transition); padding: 10px; flex-shrink: 0;
+            border-radius: 8px;
+            touch-action: manipulation;
+            display: flex; align-items: center; justify-content: center;
         }
-        .list-item:hover .delete-btn, .card:hover .delete-btn { opacity: 1; }
-        .delete-btn:hover { color: var(--text-primary); transform: scale(1.1); }
+        @media (hover: hover) and (pointer: fine) {
+            .list-item:hover .delete-btn, .card:hover .delete-btn { opacity: 1; }
+        }
+        .delete-btn:hover { color: var(--danger-color); background: var(--nav-active-bg); }
+        .delete-btn:active { transform: scale(0.9); }
+        .delete-btn:focus-visible { opacity: 1; outline: 2px solid var(--text-primary); outline-offset: 1px; }
 
         /* Habits */
         .habit-grid { display: flex; flex-direction: column; gap: 16px; }
@@ -350,20 +420,31 @@
             display: grid; grid-template-columns: minmax(150px, 2fr) auto repeat(7, 1fr) auto; gap: 16px;
             align-items: center; background: var(--surface-solid);
             padding: 20px; border-radius: var(--radius-md); border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm); transition: var(--transition);
+            box-shadow: var(--shadow-sm); transition: var(--spring), height 0.35s ease;
+            animation: popIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+            overflow: hidden;
         }
-        .habit-row:hover { box-shadow: var(--shadow-md); }
+        @media (hover: hover) and (pointer: fine) {
+            .habit-row:hover { box-shadow: var(--shadow-md); }
+        }
         .habit-days { display: flex; justify-content: space-between; gap: 12px; width: 100%; grid-column: 3 / 10;}
         .habit-day-col { display: flex; flex-direction: column; align-items: center; gap: 8px; }
         .day-label { font-size: 0.8rem; color: var(--text-secondary); font-weight: 500;}
         .habit-circle {
+            position: relative;
             width: 32px; height: 32px; border-radius: 50%; border: 2px solid var(--border-color);
             cursor: pointer; transition: var(--transition); background: var(--bg-color);
+            touch-action: manipulation;
         }
+        .habit-circle::before { content: ''; position: absolute; inset: -8px; }
+        .habit-circle:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+        .habit-circle.today { border-color: var(--text-secondary); border-style: dashed; }
         .habit-circle.done { background: var(--text-primary); border-color: var(--text-primary); box-shadow: inset 0 0 0 4px var(--surface-solid); }
+        .habit-circle.done.today { border-style: solid; }
         .habit-info { display: flex; flex-direction: column; gap: 4px; }
         .habit-name { font-weight: 600; font-size: 1.05rem; }
-        
+        .habit-freq { font-size: 0.8rem; color: var(--text-secondary); }
+
         /* Planner */
         .timeline { margin-top: 32px; border-left: 2px solid var(--border-color); padding-left: 32px; margin-left: 16px; }
         .time-block { position: relative; margin-bottom: 40px; }
@@ -372,6 +453,7 @@
             border-radius: 50%; background: var(--bg-color); border: 3px solid var(--text-secondary);
             transition: var(--transition);
         }
+        .time-block:focus-within::before,
         .time-block:hover::before { border-color: var(--text-primary); background: var(--text-primary); }
         .time-label { font-weight: 700; margin-bottom: 8px; font-size: 0.95rem; color: var(--text-secondary); letter-spacing: 0.05em; }
         .time-input {
@@ -380,26 +462,69 @@
             transition: var(--transition); box-shadow: none; border-radius: 0; padding-left: 0;
         }
         .time-input:focus { border-bottom-style: solid; border-bottom-color: var(--text-primary); }
+        .time-input::placeholder { color: var(--text-secondary); opacity: 0.6; }
 
         /* Goals */
-        .progress-wrapper { width: 100%; height: 10px; background: var(--border-color); border-radius: 5px; margin-top: 16px; overflow: hidden; cursor: pointer;}
-        .progress-bar { height: 100%; background: var(--accent-color); transition: width 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); }
-        .goal-meta { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-secondary); margin-top: 12px; font-weight: 500;}
+        .progress-wrapper {
+            position: relative;
+            width: 100%; height: 10px; background: var(--border-color); border-radius: 5px;
+            margin-top: 16px; overflow: hidden; cursor: pointer;
+            touch-action: none; /* allow custom drag handling without page scroll interference */
+        }
+        .progress-wrapper::before { content: ''; position: absolute; inset: -10px 0; } /* taller hit-area */
+        .progress-wrapper:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+        .progress-bar { height: 100%; background: var(--accent-color); transition: width 0.25s cubic-bezier(0.22, 1, 0.36, 1); }
+        .progress-wrapper.dragging .progress-bar { transition: none; }
+        .goal-meta { display: flex; justify-content: space-between; font-size: 0.9rem; color: var(--text-secondary); margin-top: 12px; font-weight: 500; font-variant-numeric: tabular-nums;}
+        .goal-card { position: relative; animation: popIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .goal-card h3 { margin-bottom: 4px; padding-right: 28px; }
+        .goal-card .delete-btn { position: absolute; top: 16px; right: 16px; }
 
         /* Notes */
         .notes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 24px; }
         .note-card {
             background: var(--surface-solid); border: 1px solid var(--border-color);
             border-radius: var(--radius-md); padding: 24px; display: flex; flex-direction: column;
-            box-shadow: var(--shadow-sm); transition: var(--transition);
+            box-shadow: var(--shadow-sm); transition: var(--spring);
+            animation: popIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
-        .note-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        @media (hover: hover) and (pointer: fine) {
+            .note-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); }
+        }
         .note-card textarea {
             border: none; background: transparent; resize: none; min-height: 180px;
             padding: 0; outline: none; color: var(--text-primary); margin-bottom: 16px;
             font-size: 1.05rem; line-height: 1.6; box-shadow: none;
         }
         .note-footer { display: flex; justify-content: space-between; align-items: center; font-size: 0.85rem; color: var(--text-secondary); border-top: 1px solid var(--border-color); padding-top: 16px;}
+
+        /* Generic removing-item animation state, driven by JS */
+        .removing {
+            opacity: 0 !important;
+            transform: scale(0.96) !important;
+            pointer-events: none !important;
+        }
+
+        /* Toast (lightweight non-blocking confirmation, replaces silent failures) */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translate(-50%, 16px);
+            background: var(--accent-color);
+            color: var(--accent-text);
+            padding: 12px 20px;
+            border-radius: var(--radius-sm);
+            font-size: 0.9rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-md);
+            opacity: 0;
+            pointer-events: none;
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.35s ease;
+            z-index: 1000;
+        }
+        .toast.show { opacity: 1; transform: translate(-50%, 0); }
+        @media (max-width: 768px) { .toast { bottom: 96px; } }
 
         /* ==========================================================================
            RESPONSIVE DESIGN (Mobile & Tablet)
@@ -408,42 +533,45 @@
             .main-content { padding: 40px; }
             .habit-row { grid-template-columns: 1fr; gap: 20px; }
             .habit-days { grid-column: 1; grid-row: 2; margin-top: 8px; justify-content: space-around; }
-            .habit-row .delete-btn { position: absolute; top: 16px; right: 16px; }
+            .habit-row .delete-btn { position: absolute; top: 16px; right: 16px; opacity: 1; }
             .habit-row { position: relative; }
             .habit-info { margin-right: 40px; }
         }
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
-            
+
             /* Bottom Navigation for Mobile */
-            .sidebar { 
-                width: 100%; 
-                height: 80px; 
-                padding: 0 16px; 
-                border-right: none; 
-                border-top: 1px solid var(--border-color); 
-                flex-direction: row; 
+            .sidebar {
+                width: 100%;
+                height: 80px;
+                padding: 0 16px;
+                border-right: none;
+                border-top: 1px solid var(--border-color);
+                flex-direction: row;
                 align-items: center;
-                justify-content: space-between; 
-                position: fixed; 
-                bottom: 0; 
+                justify-content: space-between;
+                position: fixed;
+                bottom: 0;
                 left: 0;
                 background: var(--surface-blur);
                 padding-bottom: env(safe-area-inset-bottom);
+                z-index: 200;
             }
             .logo { display: none; }
             nav { display: flex; width: 100%; justify-content: space-between; align-items: center; position: relative; }
-            
-            .nav-item { 
-                flex-direction: column; 
-                gap: 4px; 
-                padding: 10px; 
+
+            .nav-item {
+                flex-direction: column;
+                gap: 4px;
+                padding: 10px;
                 margin-bottom: 0;
                 font-size: 0.7rem;
                 flex: 1;
                 text-align: center;
                 border-radius: var(--radius-md);
+                min-height: 48px;
+                justify-content: center;
             }
             .nav-item svg { width: 22px; height: 22px; }
             .nav-item::before { display: none; } /* Disable hover ghosts on mobile */
@@ -452,7 +580,7 @@
             .nav-item.active { background: transparent; color: var(--text-primary); box-shadow: none; }
             .nav-item.active svg { stroke: var(--text-primary); stroke-width: 2.5; }
             .nav-item.active span { font-weight: 700; }
-            
+
             /* Mobile Nav Indicator (Soft frosted background rather than solid) */
             .nav-indicator {
                 background: var(--nav-active-bg);
@@ -462,19 +590,31 @@
             }
 
             .main-content { padding: 32px 24px 100px 24px; }
-            
+
             h1 { font-size: 2rem; }
             .stat-num { font-size: 2.5rem; }
             .grid-3 { grid-template-columns: 1fr; gap: 16px; }
-            
+
             .input-group { flex-direction: column; }
             .input-group input, .input-group select, .input-group button { width: 100%; }
-            
+
             .list-item { padding: 16px; }
             .delete-btn { opacity: 1; }
-            
+            .card .delete-btn { opacity: 1; }
+
             .timeline { margin-left: 8px; padding-left: 24px; }
             .time-block::before { left: -32px; }
+        }
+
+        /* Landscape phone: reclaim vertical space from the bottom bar */
+        @media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
+            .sidebar { height: 64px; }
+            .main-content { padding-bottom: 84px; }
+        }
+
+        /* High-DPI: hairline borders stay crisp rather than blurry */
+        @media (min-resolution: 2dppx) {
+            .card, .list-item, .habit-row, .note-card { border-width: 0.5px; }
         }
     </style>
 </head>
@@ -485,42 +625,42 @@
             <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
             Onyx
         </div>
-        <nav>
+        <nav role="tablist" aria-label="Main navigation">
             <div class="nav-indicator" id="nav-indicator"></div>
-            
-            <div class="nav-item active" data-target="dashboard">
+
+            <div class="nav-item active" data-target="dashboard" role="tab" tabindex="0" aria-selected="true" aria-controls="dashboard">
                 <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 <span>Dashboard</span>
             </div>
-            <div class="nav-item" data-target="habits">
+            <div class="nav-item" data-target="habits" role="tab" tabindex="0" aria-selected="false" aria-controls="habits">
                 <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg>
                 <span>Habits</span>
             </div>
-            <div class="nav-item" data-target="tasks">
+            <div class="nav-item" data-target="tasks" role="tab" tabindex="0" aria-selected="false" aria-controls="tasks">
                 <svg viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
                 <span>Tasks</span>
             </div>
-            <div class="nav-item" data-target="planner">
+            <div class="nav-item" data-target="planner" role="tab" tabindex="0" aria-selected="false" aria-controls="planner">
                 <svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
                 <span>Planner</span>
             </div>
-            <div class="nav-item" data-target="goals">
+            <div class="nav-item" data-target="goals" role="tab" tabindex="0" aria-selected="false" aria-controls="goals">
                 <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>
                 <span>Goals</span>
             </div>
-            <div class="nav-item" data-target="notes">
+            <div class="nav-item" data-target="notes" role="tab" tabindex="0" aria-selected="false" aria-controls="notes">
                 <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
                 <span>Notes</span>
             </div>
         </nav>
     </aside>
 
-    <main class="main-content">
-        
-        <section id="dashboard" class="section active">
+    <main class="main-content" id="main-content">
+
+        <section id="dashboard" class="section active" role="tabpanel">
             <h1 id="dash-greeting">Good Morning.</h1>
             <p class="header-meta" id="dash-date">Loading date...</p>
-            
+
             <div class="grid-3">
                 <div class="card">
                     <h3 style="color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 24px;">Tasks Today</h3>
@@ -544,236 +684,844 @@
                 <div>
                     <h3 style="margin-bottom: 8px;">Focus Session</h3>
                     <p style="color: var(--text-secondary); margin-bottom: 24px;">Eliminate distractions and execute your planner.</p>
-                    <button class="btn btn-outline" style="border: 1px solid var(--border-color); background: transparent; color: var(--text-primary);" onclick="document.querySelector('[data-target=\'planner\']').click()">Open Daily Planner</button>
+                    <button class="btn btn-outline" id="open-planner-btn" type="button">Open Daily Planner</button>
                 </div>
             </div>
         </section>
 
-        <section id="habits" class="section">
+        <section id="habits" class="section" role="tabpanel">
             <h1>Habit Tracker</h1>
             <p class="header-meta">Build consistency through strategic repetition.</p>
-            
+
             <div class="input-group">
-                <input type="text" id="habit-input" placeholder="e.g., Read 30 pages, Gym...">
-                <select id="habit-frequency">
+                <input type="text" id="habit-input" placeholder="e.g., Read 30 pages, Gym..." maxlength="60" aria-label="New habit name">
+                <select id="habit-frequency" aria-label="Habit frequency">
                     <option value="Daily">Daily Routine</option>
                     <option value="Weekly">Weekly Goal</option>
                 </select>
-                <button class="btn" onclick="HabitsModule.addHabit()">Add Habit</button>
+                <button class="btn" id="add-habit-btn" type="button">Add Habit</button>
             </div>
-            
-            <div class="habit-grid" id="habit-list">
-                </div>
+
+            <div class="habit-grid" id="habit-list"></div>
         </section>
 
-        <section id="tasks" class="section">
+        <section id="tasks" class="section" role="tabpanel">
             <h1>To-Do List</h1>
             <p class="header-meta">Manage your priorities and execution.</p>
 
             <div class="input-group">
-                <input type="text" id="task-input" placeholder="What needs to be done?" onkeypress="if(event.key === 'Enter') TasksModule.addTask()">
-                <select id="task-priority" style="max-width: 150px;">
+                <input type="text" id="task-input" placeholder="What needs to be done?" maxlength="120" aria-label="New task">
+                <select id="task-priority" style="max-width: 150px;" aria-label="Task priority">
                     <option value="Normal">Normal</option>
                     <option value="High">High</option>
                     <option value="Low">Low</option>
                 </select>
-                <button class="btn" onclick="TasksModule.addTask()">Add Task</button>
+                <button class="btn" id="add-task-btn" type="button">Add Task</button>
             </div>
 
-            <div id="task-list">
-                </div>
+            <div id="task-list"></div>
         </section>
 
-        <section id="planner" class="section">
+        <section id="planner" class="section" role="tabpanel">
             <h1>Daily Planner</h1>
             <p class="header-meta">Structure your day with intentional time blocks.</p>
-            
-            <div class="timeline" id="timeline-container">
-                </div>
+
+            <div class="timeline" id="timeline-container"></div>
         </section>
 
-        <section id="goals" class="section">
+        <section id="goals" class="section" role="tabpanel">
             <h1>Goals</h1>
             <p class="header-meta">Track milestones and long-term objectives.</p>
 
             <div class="input-group">
-                <input type="text" id="goal-input" placeholder="Define a new goal...">
-                <input type="date" id="goal-date" style="max-width: 200px;">
-                <button class="btn" onclick="GoalsModule.addGoal()">Set Goal</button>
+                <input type="text" id="goal-input" placeholder="Define a new goal..." maxlength="80" aria-label="New goal">
+                <input type="date" id="goal-date" style="max-width: 200px;" aria-label="Goal due date">
+                <button class="btn" id="add-goal-btn" type="button">Set Goal</button>
             </div>
 
-            <div class="grid-3" id="goal-list">
-                </div>
+            <div class="grid-3" id="goal-list"></div>
         </section>
 
-        <section id="notes" class="section">
-            <h1>Notes & Ideas</h1>
+        <section id="notes" class="section" role="tabpanel">
+            <h1>Notes &amp; Ideas</h1>
             <p class="header-meta">Capture thoughts, reflections, and information.</p>
 
             <div class="input-group">
-                <button class="btn" onclick="NotesModule.addNote()">+ Create New Note</button>
+                <button class="btn" id="add-note-btn" type="button">+ Create New Note</button>
             </div>
 
-            <div class="notes-grid" id="notes-list">
-                </div>
+            <div class="notes-grid" id="notes-list"></div>
         </section>
 
     </main>
 
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
     <script>
+        'use strict';
+
         /**
-         * Core Application Data & Storage Module
+         * ==========================================================================
+         * UTILITIES
+         * ==========================================================================
          */
-        const Store = {
-            data: {
-                tasks: [],
-                habits: [], // Schema: { id, name, frequency: 'Daily'|'Weekly', history: {} }
-                goals: [],
-                notes: [],
-                planner: {}
-            },
-            
-            init() {
-                const saved = localStorage.getItem('onyx_data_v2'); 
-                if (saved) {
-                    this.data = JSON.parse(saved);
-                } else {
-                    this.data.tasks = [
-                        { id: Date.now(), text: "Explore Onyx interface on Mobile & Desktop", completed: false, priority: "High" }
-                    ];
-                    this.data.habits = [
-                        { id: Date.now()+1, name: "Drink 2L Water", frequency: "Daily", history: {} },
-                        { id: Date.now()+2, name: "Deep Work Session", frequency: "Weekly", history: {} }
-                    ];
-                    this.save();
-                }
+        const Utils = {
+            debounce(fn, wait) {
+                let timer = null;
+                return (...args) => {
+                    clearTimeout(timer);
+                    timer = setTimeout(() => fn(...args), wait);
+                };
             },
 
-            save() {
-                localStorage.setItem('onyx_data_v2', JSON.stringify(this.data));
-                if (typeof DashboardModule !== 'undefined') DashboardModule.update();
+            // Prevents accidental double-submits from fast double-taps/double-clicks
+            guard(fn, cooldown = 350) {
+                let locked = false;
+                return (...args) => {
+                    if (locked) return;
+                    locked = true;
+                    fn(...args);
+                    setTimeout(() => { locked = false; }, cooldown);
+                };
+            },
+
+            escapeHTML(str) {
+                if (!str) return '';
+                return String(str).replace(/[&<>'"]/g, tag => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+                }[tag]));
+            },
+
+            uid() {
+                return Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+            },
+
+            todayKey(offsetDays = 0) {
+                const d = new Date();
+                d.setDate(d.getDate() + offsetDays);
+                return d.toISOString().slice(0, 10);
+            },
+
+            last7Days() {
+                const days = [];
+                for (let i = 6; i >= 0; i--) {
+                    const d = new Date();
+                    d.setDate(d.getDate() - i);
+                    days.push({
+                        key: d.toISOString().slice(0, 10),
+                        label: d.toLocaleDateString('en-US', { weekday: 'narrow' }),
+                        isToday: i === 0
+                    });
+                }
+                return days;
+            },
+
+            formatDate(dateStr) {
+                if (!dateStr) return 'No due date';
+                // Avoid timezone shift on plain YYYY-MM-DD parsing
+                const [y, m, d] = dateStr.split('-').map(Number);
+                const dt = new Date(y, (m || 1) - 1, d || 1);
+                return dt.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+            },
+
+            timeAgo(ts) {
+                const diff = Date.now() - ts;
+                const min = Math.floor(diff / 60000);
+                if (min < 1) return 'Just now';
+                if (min < 60) return `${min}m ago`;
+                const hrs = Math.floor(min / 60);
+                if (hrs < 24) return `${hrs}h ago`;
+                const days = Math.floor(hrs / 24);
+                return `${days}d ago`;
+            },
+
+            // Smoothly collapses and removes a DOM node, then invokes callback.
+            removeElement(el, callback) {
+                if (!el) { if (callback) callback(); return; }
+                const startHeight = el.offsetHeight;
+                el.style.height = startHeight + 'px';
+                el.style.overflow = 'hidden';
+                // Force reflow so the browser registers the starting height before animating
+                void el.offsetHeight;
+                el.classList.add('removing');
+                el.style.marginBottom = '0px';
+                el.style.paddingTop = '0px';
+                el.style.paddingBottom = '0px';
+                el.style.height = '0px';
+                el.style.border = 'none';
+
+                let done = false;
+                const finish = () => {
+                    if (done) return;
+                    done = true;
+                    el.remove();
+                    if (callback) callback();
+                };
+                el.addEventListener('transitionend', finish, { once: true });
+                // Safety net in case transitionend doesn't fire (e.g. reduced motion)
+                setTimeout(finish, 400);
             }
         };
 
         /**
-         * Navigation & UI Module
+         * ==========================================================================
+         * TOAST (non-blocking status messages)
+         * ==========================================================================
+         */
+        const Toast = {
+            el: null,
+            timer: null,
+            init() { this.el = document.getElementById('toast'); },
+            show(msg) {
+                if (!this.el) return;
+                this.el.textContent = msg;
+                this.el.classList.add('show');
+                clearTimeout(this.timer);
+                this.timer = setTimeout(() => this.el.classList.remove('show'), 1800);
+            }
+        };
+
+        /**
+         * ==========================================================================
+         * STORE — persistence layer
+         * ==========================================================================
+         */
+        const Store = {
+            data: {
+                tasks: [],
+                habits: [],
+                goals: [],
+                notes: [],
+                planner: {}
+            },
+
+            init() {
+                try {
+                    const saved = localStorage.getItem('onyx_data_v3');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        this.data = Object.assign({ tasks: [], habits: [], goals: [], notes: [], planner: {} }, parsed);
+                        return;
+                    }
+                } catch (e) {
+                    console.warn('Onyx: could not read saved data, starting fresh.', e);
+                }
+
+                // Seed data for first-run experience
+                this.data.tasks = [
+                    { id: Utils.uid(), text: 'Explore Onyx on mobile & desktop', completed: false, priority: 'High' }
+                ];
+                this.data.habits = [
+                    { id: Utils.uid(), name: 'Drink 2L Water', frequency: 'Daily', history: {} },
+                    { id: Utils.uid(), name: 'Deep Work Session', frequency: 'Weekly', history: {} }
+                ];
+                this.save();
+            },
+
+            save() {
+                try {
+                    localStorage.setItem('onyx_data_v3', JSON.stringify(this.data));
+                } catch (e) {
+                    console.warn('Onyx: could not persist data (storage may be full/blocked).', e);
+                    Toast.show('Changes could not be saved');
+                }
+                DashboardModule.update();
+            }
+        };
+
+        /**
+         * ==========================================================================
+         * UI — navigation, chrome, global behaviors
+         * ==========================================================================
          */
         const UI = {
+            indicator: null,
+            activeItem: null,
+
             init() {
-                // ==========================================
-                // LIQUID GLASS INDICATOR LOGIC
-                // ==========================================
-                const indicator = document.getElementById('nav-indicator');
-                
-                const updateIndicator = (activeItem, instant = false) => {
-                    if (!activeItem || !indicator) return;
-                    
-                    // Disable transition if resizing or initializing
-                    if (instant) indicator.style.transition = 'none';
-                    else indicator.style.transition = '';
+                this.indicator = document.getElementById('nav-indicator');
+                this.activeItem = document.querySelector('.nav-item.active');
 
-                    // Calculate translation based on the relative position within <nav>
-                    indicator.style.transform = `translate(${activeItem.offsetLeft}px, ${activeItem.offsetTop}px)`;
-                    indicator.style.width = `${activeItem.offsetWidth}px`;
-                    indicator.style.height = `${activeItem.offsetHeight}px`;
-
-                    if (instant) {
-                        void indicator.offsetWidth; // Force a synchronous reflow to snap immediately
-                        indicator.style.transition = ''; // Restore CSS spring transition
-                    }
-                };
-
-                // Tab Switching Logic
                 document.querySelectorAll('.nav-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        if (item.classList.contains('active')) return; // Ignore if already selected
-
-                        // Update states
-                        document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-                        item.classList.add('active');
-                        
-                        // Fire animation
-                        updateIndicator(item);
-                        
-                        // Handle view routing
-                        const targetId = item.getAttribute('data-target');
-                        document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
-                        document.getElementById(targetId).classList.add('active');
-                        
-                        // Scroll to top on mobile tab switch
-                        document.querySelector('.main-content').scrollTop = 0;
+                    item.addEventListener('click', () => this.selectTab(item));
+                    item.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.selectTab(item);
+                        }
                     });
                 });
 
-                // Set initial position
-                const activeNav = document.querySelector('.nav-item.active');
-                // Use requestAnimationFrame to ensure layout is calculated before positioning
-                requestAnimationFrame(() => updateIndicator(activeNav, true));
+                document.getElementById('open-planner-btn').addEventListener('click', () => {
+                    const plannerTab = document.querySelector('[data-target="planner"]');
+                    this.selectTab(plannerTab);
+                });
 
-                // Handle resize to lock the indicator smoothly to the active tab
+                requestAnimationFrame(() => this.updateIndicator(this.activeItem, true));
+
                 let resizeTimer;
                 window.addEventListener('resize', () => {
                     clearTimeout(resizeTimer);
-                    resizeTimer = setTimeout(() => {
-                        updateIndicator(document.querySelector('.nav-item.active'), true);
-                    }, 20);
-                });
+                    resizeTimer = setTimeout(() => this.updateIndicator(document.querySelector('.nav-item.active'), true), 100);
+                }, { passive: true });
 
                 this.updateTime();
                 setInterval(() => this.updateTime(), 60000);
             },
 
+            selectTab(item) {
+                if (!item || item.classList.contains('active')) return;
+
+                document.querySelectorAll('.nav-item').forEach(nav => {
+                    nav.classList.remove('active');
+                    nav.setAttribute('aria-selected', 'false');
+                });
+                item.classList.add('active');
+                item.setAttribute('aria-selected', 'true');
+
+                this.updateIndicator(item);
+
+                const targetId = item.getAttribute('data-target');
+                document.querySelectorAll('.section').forEach(sec => sec.classList.remove('active'));
+                const target = document.getElementById(targetId);
+                target.classList.add('active');
+
+                document.getElementById('main-content').scrollTop = 0;
+            },
+
+            updateIndicator(activeItem, instant = false) {
+                if (!activeItem || !this.indicator) return;
+
+                if (instant) this.indicator.style.transition = 'none';
+                else this.indicator.style.transition = '';
+
+                this.indicator.style.transform = `translate(${activeItem.offsetLeft}px, ${activeItem.offsetTop}px)`;
+                this.indicator.style.width = `${activeItem.offsetWidth}px`;
+                this.indicator.style.height = `${activeItem.offsetHeight}px`;
+                this.indicator.style.opacity = '1';
+
+                if (instant) {
+                    void this.indicator.offsetWidth; // force reflow to snap immediately
+                    this.indicator.style.transition = '';
+                }
+            },
+
             updateTime() {
                 const now = new Date();
                 const hour = now.getHours();
-                
-                let greeting = "Good Evening";
-                if (hour < 12) greeting = "Good Morning";
-                else if (hour < 17) greeting = "Good Afternoon";
-                
+
+                let greeting = 'Good Evening';
+                if (hour < 12) greeting = 'Good Morning';
+                else if (hour < 17) greeting = 'Good Afternoon';
+
                 document.getElementById('dash-greeting').textContent = `${greeting}.`;
-                
+
                 const options = { weekday: 'long', month: 'long', day: 'numeric' };
                 document.getElementById('dash-date').textContent = now.toLocaleDateString('en-US', options);
-            },
-
-            escapeHTML(str) {
-                if(!str) return '';
-                return str.replace(/[&<>'"]/g, tag => ({
-                    '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
-                }[tag]));
             }
         };
 
+        /**
+         * ==========================================================================
+         * DASHBOARD
+         * ==========================================================================
+         */
         const DashboardModule = {
             update() {
                 const totalTasks = Store.data.tasks.length;
                 const completedTasks = Store.data.tasks.filter(t => t.completed).length;
-                
+
                 const statTasksEl = document.getElementById('stat-tasks');
-                if(statTasksEl) statTasksEl.textContent = `${completedTasks}/${totalTasks}`;
+                if (statTasksEl) statTasksEl.textContent = `${completedTasks}/${totalTasks}`;
 
                 const statHabitsEl = document.getElementById('stat-habits');
-                if(statHabitsEl) statHabitsEl.textContent = Store.data.habits.length;
+                if (statHabitsEl) statHabitsEl.textContent = Store.data.habits.length;
 
                 const statGoalsEl = document.getElementById('stat-goals');
-                if(statGoalsEl) {
-                    if (Store.data.goals.length === 0) {
+                if (statGoalsEl) {
+                    const goals = Store.data.goals;
+                    if (goals.length === 0) {
                         statGoalsEl.textContent = '0%';
                     } else {
-                        // Dummy logic for template
-                        statGoalsEl.textContent = '0%';
+                        const avg = Math.round(goals.reduce((sum, g) => sum + (g.progress || 0), 0) / goals.length);
+                        statGoalsEl.textContent = `${avg}%`;
                     }
                 }
             }
         };
 
-        // Initialize App
+        /**
+         * ==========================================================================
+         * TASKS
+         * ==========================================================================
+         */
+        const TasksModule = {
+            listEl: null,
+
+            init() {
+                this.listEl = document.getElementById('task-list');
+                this.render();
+
+                document.getElementById('add-task-btn').addEventListener('click', Utils.guard(() => this.addTask()));
+                document.getElementById('task-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addTask();
+                });
+
+                // Event delegation — survives re-renders automatically, no listener leaks
+                this.listEl.addEventListener('click', (e) => {
+                    const checkbox = e.target.closest('.checkbox');
+                    const del = e.target.closest('.delete-btn');
+                    if (checkbox) this.toggleTask(checkbox.closest('.list-item').dataset.id);
+                    else if (del) this.deleteTask(del.closest('.list-item').dataset.id);
+                });
+                this.listEl.addEventListener('keydown', (e) => {
+                    const checkbox = e.target.closest('.checkbox');
+                    if (checkbox && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        this.toggleTask(checkbox.closest('.list-item').dataset.id);
+                    }
+                });
+            },
+
+            addTask() {
+                const input = document.getElementById('task-input');
+                const prioritySel = document.getElementById('task-priority');
+                const text = input.value.trim();
+                if (!text) { input.focus(); return; }
+
+                Store.data.tasks.push({ id: Utils.uid(), text, completed: false, priority: prioritySel.value });
+                Store.save();
+                input.value = '';
+                input.focus();
+                this.render(true);
+            },
+
+            toggleTask(id) {
+                const task = Store.data.tasks.find(t => t.id === id);
+                if (!task) return;
+                task.completed = !task.completed;
+                Store.save();
+
+                const row = this.listEl.querySelector(`[data-id="${CSS.escape(id)}"]`);
+                if (row) {
+                    const box = row.querySelector('.checkbox');
+                    const label = row.querySelector('.task-text');
+                    box.classList.toggle('checked', task.completed);
+                    box.setAttribute('aria-checked', String(task.completed));
+                    label.classList.toggle('completed', task.completed);
+                }
+            },
+
+            deleteTask(id) {
+                const row = this.listEl.querySelector(`[data-id="${CSS.escape(id)}"]`);
+                Utils.removeElement(row, () => {
+                    Store.data.tasks = Store.data.tasks.filter(t => t.id !== id);
+                    Store.save();
+                    if (Store.data.tasks.length === 0) this.render();
+                });
+            },
+
+            buildItem(task) {
+                const priorityBadge = task.priority && task.priority !== 'Normal'
+                    ? `<span class="badge ${task.priority === 'High' ? 'high' : 'low'}">${Utils.escapeHTML(task.priority)}</span>`
+                    : '';
+                return `
+                    <div class="list-item" data-id="${task.id}">
+                        <div class="list-item-left">
+                            <div class="checkbox ${task.completed ? 'checked' : ''}" role="checkbox" aria-checked="${task.completed}" tabindex="0" aria-label="Mark task complete"></div>
+                            <span class="task-text ${task.completed ? 'completed' : ''}">${Utils.escapeHTML(task.text)}</span>
+                        </div>
+                        ${priorityBadge}
+                        <button class="delete-btn" type="button" aria-label="Delete task">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
+                        </button>
+                    </div>`;
+            },
+
+            render() {
+                if (Store.data.tasks.length === 0) {
+                    this.listEl.innerHTML = `<div class="empty-state">No tasks yet — add one above to get started.</div>`;
+                    return;
+                }
+                this.listEl.innerHTML = Store.data.tasks.map(t => this.buildItem(t)).join('');
+            }
+        };
+
+        /**
+         * ==========================================================================
+         * HABITS
+         * ==========================================================================
+         */
+        const HabitsModule = {
+            listEl: null,
+
+            init() {
+                this.listEl = document.getElementById('habit-list');
+                this.render();
+
+                document.getElementById('add-habit-btn').addEventListener('click', Utils.guard(() => this.addHabit()));
+                document.getElementById('habit-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addHabit();
+                });
+
+                this.listEl.addEventListener('click', (e) => {
+                    const circle = e.target.closest('.habit-circle');
+                    const del = e.target.closest('.delete-btn');
+                    if (circle) this.toggleDay(circle.closest('.habit-row').dataset.id, circle.dataset.key, circle);
+                    else if (del) this.deleteHabit(del.closest('.habit-row').dataset.id);
+                });
+                this.listEl.addEventListener('keydown', (e) => {
+                    const circle = e.target.closest('.habit-circle');
+                    if (circle && (e.key === 'Enter' || e.key === ' ')) {
+                        e.preventDefault();
+                        this.toggleDay(circle.closest('.habit-row').dataset.id, circle.dataset.key, circle);
+                    }
+                });
+            },
+
+            addHabit() {
+                const input = document.getElementById('habit-input');
+                const freqSel = document.getElementById('habit-frequency');
+                const name = input.value.trim();
+                if (!name) { input.focus(); return; }
+
+                Store.data.habits.push({ id: Utils.uid(), name, frequency: freqSel.value, history: {} });
+                Store.save();
+                input.value = '';
+                input.focus();
+                this.render();
+            },
+
+            toggleDay(id, key, circleEl) {
+                const habit = Store.data.habits.find(h => h.id === id);
+                if (!habit) return;
+                habit.history[key] = !habit.history[key];
+                if (!habit.history[key]) delete habit.history[key];
+                Store.save();
+                if (circleEl) {
+                    circleEl.classList.toggle('done', !!habit.history[key]);
+                    circleEl.setAttribute('aria-pressed', String(!!habit.history[key]));
+                }
+            },
+
+            deleteHabit(id) {
+                const row = this.listEl.querySelector(`[data-id="${CSS.escape(id)}"]`);
+                Utils.removeElement(row, () => {
+                    Store.data.habits = Store.data.habits.filter(h => h.id !== id);
+                    Store.save();
+                    if (Store.data.habits.length === 0) this.render();
+                });
+            },
+
+            buildRow(habit) {
+                const days = Utils.last7Days();
+                const daysHTML = days.map(d => `
+                    <div class="habit-day-col">
+                        <span class="day-label">${d.label}</span>
+                        <div class="habit-circle ${habit.history[d.key] ? 'done' : ''} ${d.isToday ? 'today' : ''}"
+                             data-key="${d.key}" role="button" tabindex="0"
+                             aria-pressed="${!!habit.history[d.key]}"
+                             aria-label="${Utils.escapeHTML(habit.name)} on ${d.key}"></div>
+                    </div>`).join('');
+
+                return `
+                    <div class="habit-row" data-id="${habit.id}">
+                        <div class="habit-info">
+                            <span class="habit-name">${Utils.escapeHTML(habit.name)}</span>
+                            <span class="habit-freq">${Utils.escapeHTML(habit.frequency)}</span>
+                        </div>
+                        <div></div>
+                        <div class="habit-days">${daysHTML}</div>
+                        <button class="delete-btn" type="button" aria-label="Delete habit">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
+                        </button>
+                    </div>`;
+            },
+
+            render() {
+                if (Store.data.habits.length === 0) {
+                    this.listEl.innerHTML = `<div class="empty-state">No habits tracked yet — add one above.</div>`;
+                    return;
+                }
+                this.listEl.innerHTML = Store.data.habits.map(h => this.buildRow(h)).join('');
+            }
+        };
+
+        /**
+         * ==========================================================================
+         * GOALS
+         * ==========================================================================
+         */
+        const GoalsModule = {
+            listEl: null,
+            debouncedSave: null,
+
+            init() {
+                this.listEl = document.getElementById('goal-list');
+                this.debouncedSave = Utils.debounce(() => Store.save(), 300);
+                this.render();
+
+                document.getElementById('add-goal-btn').addEventListener('click', Utils.guard(() => this.addGoal()));
+                document.getElementById('goal-input').addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') this.addGoal();
+                });
+
+                this.listEl.addEventListener('click', (e) => {
+                    const del = e.target.closest('.delete-btn');
+                    const wrapper = e.target.closest('.progress-wrapper');
+                    if (del) { this.deleteGoal(del.closest('.goal-card').dataset.id); return; }
+                    if (wrapper) this.setFromPointer(wrapper, e.clientX);
+                });
+
+                this.listEl.addEventListener('keydown', (e) => {
+                    const wrapper = e.target.closest('.progress-wrapper');
+                    if (!wrapper) return;
+                    const id = wrapper.closest('.goal-card').dataset.id;
+                    const goal = Store.data.goals.find(g => g.id === id);
+                    if (!goal) return;
+                    if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); this.applyProgress(goal, wrapper, Math.min(100, goal.progress + 5)); this.debouncedSave(); }
+                    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); this.applyProgress(goal, wrapper, Math.max(0, goal.progress - 5)); this.debouncedSave(); }
+                });
+
+                // Drag-to-set support (mouse + touch via Pointer Events)
+                let dragWrapper = null;
+                this.listEl.addEventListener('pointerdown', (e) => {
+                    const wrapper = e.target.closest('.progress-wrapper');
+                    if (!wrapper) return;
+                    dragWrapper = wrapper;
+                    wrapper.classList.add('dragging');
+                    wrapper.setPointerCapture(e.pointerId);
+                    this.setFromPointer(wrapper, e.clientX, false);
+                });
+                this.listEl.addEventListener('pointermove', (e) => {
+                    if (!dragWrapper) return;
+                    this.setFromPointer(dragWrapper, e.clientX, false);
+                });
+                const endDrag = () => {
+                    if (!dragWrapper) return;
+                    dragWrapper.classList.remove('dragging');
+                    this.debouncedSave();
+                    dragWrapper = null;
+                };
+                this.listEl.addEventListener('pointerup', endDrag);
+                this.listEl.addEventListener('pointercancel', endDrag);
+            },
+
+            addGoal() {
+                const input = document.getElementById('goal-input');
+                const dateInput = document.getElementById('goal-date');
+                const text = input.value.trim();
+                if (!text) { input.focus(); return; }
+
+                Store.data.goals.push({ id: Utils.uid(), text, dueDate: dateInput.value || '', progress: 0 });
+                Store.save();
+                input.value = '';
+                dateInput.value = '';
+                input.focus();
+                this.render();
+            },
+
+            applyProgress(goal, wrapper, pct) {
+                goal.progress = pct;
+                const card = wrapper.closest('.goal-card');
+                card.querySelector('.progress-bar').style.width = pct + '%';
+                card.querySelector('.progress-pct').textContent = pct + '%';
+                wrapper.setAttribute('aria-valuenow', String(pct));
+            },
+
+            setFromPointer(wrapper, clientX, save = true) {
+                const id = wrapper.closest('.goal-card').dataset.id;
+                const goal = Store.data.goals.find(g => g.id === id);
+                if (!goal) return;
+                const rect = wrapper.getBoundingClientRect();
+                let pct = Math.round(((clientX - rect.left) / rect.width) * 100);
+                pct = Math.max(0, Math.min(100, Math.round(pct / 5) * 5));
+                this.applyProgress(goal, wrapper, pct);
+                if (save) { Store.save(); }
+            },
+
+            deleteGoal(id) {
+                const card = this.listEl.querySelector(`[data-id="${CSS.escape(id)}"]`);
+                Utils.removeElement(card, () => {
+                    Store.data.goals = Store.data.goals.filter(g => g.id !== id);
+                    Store.save();
+                    if (Store.data.goals.length === 0) this.render();
+                });
+            },
+
+            buildCard(goal) {
+                const pct = goal.progress || 0;
+                return `
+                    <div class="card goal-card" data-id="${goal.id}">
+                        <h3>${Utils.escapeHTML(goal.text)}</h3>
+                        <div class="progress-wrapper" role="slider" tabindex="0" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${pct}" aria-label="${Utils.escapeHTML(goal.text)} progress">
+                            <div class="progress-bar" style="width:${pct}%"></div>
+                        </div>
+                        <div class="goal-meta">
+                            <span class="progress-pct">${pct}%</span>
+                            <span>Due: ${Utils.escapeHTML(Utils.formatDate(goal.dueDate))}</span>
+                        </div>
+                        <button class="delete-btn" type="button" aria-label="Delete goal">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
+                        </button>
+                    </div>`;
+            },
+
+            render() {
+                if (Store.data.goals.length === 0) {
+                    this.listEl.innerHTML = `<div class="empty-state">No goals set — define one above to start tracking.</div>`;
+                    return;
+                }
+                this.listEl.innerHTML = Store.data.goals.map(g => this.buildCard(g)).join('');
+            }
+        };
+
+        /**
+         * ==========================================================================
+         * NOTES
+         * ==========================================================================
+         */
+        const NotesModule = {
+            listEl: null,
+            saveTimers: {},
+
+            init() {
+                this.listEl = document.getElementById('notes-list');
+                this.render();
+
+                document.getElementById('add-note-btn').addEventListener('click', Utils.guard(() => this.addNote()));
+
+                this.listEl.addEventListener('click', (e) => {
+                    const del = e.target.closest('.delete-btn');
+                    if (del) this.deleteNote(del.closest('.note-card').dataset.id);
+                });
+
+                this.listEl.addEventListener('input', (e) => {
+                    const textarea = e.target.closest('textarea');
+                    if (!textarea) return;
+                    const id = textarea.closest('.note-card').dataset.id;
+                    const note = Store.data.notes.find(n => n.id === id);
+                    if (!note) return;
+                    note.content = textarea.value;
+                    this.debouncedPersist(id);
+                });
+            },
+
+            debouncedPersist(id) {
+                clearTimeout(this.saveTimers[id]);
+                this.saveTimers[id] = setTimeout(() => {
+                    const note = Store.data.notes.find(n => n.id === id);
+                    if (!note) return;
+                    note.updatedAt = Date.now();
+                    Store.save();
+                    const footer = this.listEl.querySelector(`[data-id="${CSS.escape(id)}"] .note-timestamp`);
+                    if (footer) footer.textContent = Utils.timeAgo(note.updatedAt);
+                }, 500);
+            },
+
+            addNote() {
+                const note = { id: Utils.uid(), content: '', updatedAt: Date.now() };
+                Store.data.notes.unshift(note);
+                Store.save();
+                this.render();
+                const firstTextarea = this.listEl.querySelector('.note-card textarea');
+                if (firstTextarea) firstTextarea.focus();
+            },
+
+            deleteNote(id) {
+                clearTimeout(this.saveTimers[id]);
+                const card = this.listEl.querySelector(`[data-id="${CSS.escape(id)}"]`);
+                Utils.removeElement(card, () => {
+                    Store.data.notes = Store.data.notes.filter(n => n.id !== id);
+                    Store.save();
+                    if (Store.data.notes.length === 0) this.render();
+                });
+            },
+
+            buildCard(note) {
+                return `
+                    <div class="note-card" data-id="${note.id}">
+                        <textarea placeholder="Start typing..." aria-label="Note content" maxlength="4000">${Utils.escapeHTML(note.content)}</textarea>
+                        <div class="note-footer">
+                            <span class="note-timestamp">${Utils.timeAgo(note.updatedAt)}</span>
+                            <button class="delete-btn" type="button" aria-label="Delete note">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path></svg>
+                            </button>
+                        </div>
+                    </div>`;
+            },
+
+            render() {
+                if (Store.data.notes.length === 0) {
+                    this.listEl.innerHTML = `<div class="empty-state">No notes yet — create one to capture an idea.</div>`;
+                    return;
+                }
+                this.listEl.innerHTML = Store.data.notes.map(n => this.buildCard(n)).join('');
+            }
+        };
+
+        /**
+         * ==========================================================================
+         * PLANNER
+         * ==========================================================================
+         */
+        const PlannerModule = {
+            containerEl: null,
+            slots: ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'],
+            debouncedSave: null,
+
+            init() {
+                this.containerEl = document.getElementById('timeline-container');
+                this.debouncedSave = Utils.debounce(() => Store.save(), 400);
+                this.render();
+
+                this.containerEl.addEventListener('input', (e) => {
+                    const input = e.target.closest('.time-input');
+                    if (!input) return;
+                    Store.data.planner[input.dataset.time] = input.value;
+                    this.debouncedSave();
+                });
+            },
+
+            render() {
+                this.containerEl.innerHTML = this.slots.map(time => `
+                    <div class="time-block">
+                        <div class="time-label">${this.formatSlot(time)}</div>
+                        <input type="text" class="time-input" data-time="${time}"
+                               value="${Utils.escapeHTML(Store.data.planner[time] || '')}"
+                               placeholder="Add a plan for this block..." aria-label="Plan for ${this.formatSlot(time)}">
+                    </div>`).join('');
+            },
+
+            formatSlot(time) {
+                const [h, m] = time.split(':').map(Number);
+                const period = h >= 12 ? 'PM' : 'AM';
+                const hour12 = h % 12 === 0 ? 12 : h % 12;
+                return `${hour12}:${String(m).padStart(2, '0')} ${period}`;
+            }
+        };
+
+        /**
+         * ==========================================================================
+         * BOOTSTRAP
+         * ==========================================================================
+         */
         document.addEventListener('DOMContentLoaded', () => {
             Store.init();
+            Toast.init();
             UI.init();
+            TasksModule.init();
+            HabitsModule.init();
+            GoalsModule.init();
+            NotesModule.init();
+            PlannerModule.init();
+            DashboardModule.update();
         });
 
+        // Avoid dangling debounce timers / listeners across page unload (Safari bfcache friendliness)
+        window.addEventListener('pagehide', () => {
+            Store.save();
+        });
     </script>
 </body>
 </html>
