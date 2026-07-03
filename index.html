@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Onyx | Premium Productivity</title>
 
+    <!-- Home-screen / standalone web app behavior: lets page content draw underneath the
+         status bar instead of leaving a default white/gray system bar at the top. -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Onyx">
+    <meta name="theme-color" content="#f4f4f5" media="(prefers-color-scheme: light)" id="theme-color-light">
+    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)" id="theme-color-dark">
+
     <link rel="icon" type="image/png" href="favicon.png">
     <link rel="apple-touch-icon" href="favicon.png">
 
@@ -89,7 +98,12 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { -webkit-text-size-adjust: 100%; }
+        html {
+            -webkit-text-size-adjust: 100%;
+            background-color: var(--bg-color);
+            height: 100%;
+            transition: background-color 0.4s ease;
+        }
 
         body {
             font-family: var(--font-stack);
@@ -101,7 +115,9 @@
             display: flex;
             height: 100vh;
             height: 100dvh;
+            min-height: -webkit-fill-available;
             overflow: hidden;
+            overscroll-behavior: none;
             font-size: 15px;
             -webkit-tap-highlight-color: transparent;
             transition: background-color 0.4s ease, color 0.4s ease;
@@ -328,6 +344,21 @@
         }
         .select-box.checked { background: var(--accent-color); border-color: var(--accent-color); }
         .select-box.checked::after { content: '✓'; color: var(--accent-text); font-size: 12px; font-weight: 700; }
+
+        /* Kebab dropdown menu (row actions) */
+        .kebab-btn { font-size: 1.1rem; line-height: 1; letter-spacing: 1px; opacity: 1 !important; }
+        .menu-dropdown {
+            position: fixed; background: var(--surface-raised); border: 1px solid var(--border-color);
+            border-radius: 12px; box-shadow: var(--shadow-lg); padding: 6px; min-width: 168px; z-index: 1100;
+            animation: popIn 0.18s cubic-bezier(0.22,1,0.36,1) forwards; backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+        }
+        .menu-item {
+            display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 8px;
+            font-size: 0.88rem; font-weight: 500; cursor: pointer; color: var(--text-primary); transition: var(--spring-fast);
+        }
+        .menu-item svg { width: 15px; height: 15px; flex-shrink: 0; }
+        .menu-item:hover { background: var(--nav-active-bg); }
+        .menu-item.danger { color: var(--danger-color); }
 
         /* Modal */
         .modal-overlay {
@@ -559,7 +590,7 @@
         @media (hover: hover) and (pointer: fine) { .note-card:hover { box-shadow: var(--shadow-md); transform: translateY(-2px); } }
         .note-card.pinned { border-color: var(--text-primary); }
         .note-card-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
-        .note-title { font-weight: 700; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .note-title { font-weight: 700; font-size: 1.05rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1; min-width: 0; }
         .note-card-actions { display: flex; gap: 2px; flex-shrink: 0; }
         .note-preview { color: var(--text-secondary); font-size: 0.9rem; line-height: 1.55; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; flex: 1; word-break: break-word; }
         .note-preview :is(h1,h2,h3) { font-size: 1em; margin: 0; }
@@ -1075,6 +1106,53 @@
 
         /**
          * ==========================================================================
+         * MENU — compact floating action menu (kebab dropdown), anchored to a button.
+         * Consolidates row actions (edit/duplicate/archive/delete) into one control so
+         * long item names never get squeezed by a row of icon buttons.
+         * ==========================================================================
+         */
+        const Menu = {
+            el: null,
+            init() {
+                document.addEventListener('click', (e) => { if (this.el && !this.el.contains(e.target) && !e.target.closest('[data-menu-anchor]')) this.close(); });
+                document.addEventListener('keydown', (e) => { if (e.key === 'Escape') this.close(); });
+                window.addEventListener('resize', () => this.close(), { passive: true });
+                document.getElementById('main-content').addEventListener('scroll', () => this.close(), { passive: true });
+            },
+            open(anchorBtn, items) {
+                this.close();
+                anchorBtn.setAttribute('data-menu-anchor', '1');
+                const menu = document.createElement('div');
+                menu.className = 'menu-dropdown';
+                menu.innerHTML = items.map((it, i) => `<div class="menu-item ${it.danger ? 'danger' : ''}" data-menu-idx="${i}">${it.icon || ''}<span>${Utils.escapeHTML(it.label)}</span></div>`).join('');
+                document.body.appendChild(menu);
+                this.el = menu;
+
+                const rect = anchorBtn.getBoundingClientRect();
+                const menuRect = menu.getBoundingClientRect();
+                let top = rect.bottom + 6;
+                let left = rect.right - menuRect.width;
+                if (top + menuRect.height > window.innerHeight - 12) top = rect.top - menuRect.height - 6;
+                if (left < 8) left = 8;
+                menu.style.top = `${Math.max(8, top)}px`;
+                menu.style.left = `${left}px`;
+
+                menu.addEventListener('click', (e) => {
+                    const row = e.target.closest('.menu-item');
+                    if (!row) return;
+                    const item = items[Number(row.dataset.menuIdx)];
+                    this.close();
+                    if (item && item.onClick) item.onClick();
+                });
+            },
+            close() {
+                if (this.el) { this.el.remove(); this.el = null; }
+                document.querySelectorAll('[data-menu-anchor]').forEach(b => b.removeAttribute('data-menu-anchor'));
+            }
+        };
+
+        /**
+         * ==========================================================================
          * STORE — persistence layer
          * ==========================================================================
          */
@@ -1177,6 +1255,17 @@
                 const theme = Store.data.settings.theme || 'system';
                 if (theme === 'system') document.documentElement.removeAttribute('data-theme');
                 else document.documentElement.setAttribute('data-theme', theme);
+                this.syncMetaColor(theme);
+            },
+            syncMetaColor(theme) {
+                // Keeps the mobile status-bar / browser chrome color in sync with the
+                // active theme so a manual override doesn't fight the system-preference tags.
+                const light = document.getElementById('theme-color-light');
+                const dark = document.getElementById('theme-color-dark');
+                if (!light || !dark) return;
+                if (theme === 'light') { light.media = 'all'; dark.media = 'not all'; }
+                else if (theme === 'dark') { dark.media = 'all'; light.media = 'not all'; }
+                else { light.media = '(prefers-color-scheme: light)'; dark.media = '(prefers-color-scheme: dark)'; }
             },
             set(theme) { Store.data.settings.theme = theme; Store.save(); this.apply(); }
         };
@@ -1317,10 +1406,7 @@
 
                 this.listEl.addEventListener('click', (e) => {
                     const checkbox = e.target.closest('.checkbox');
-                    const del = e.target.closest('.delete-btn');
-                    const edit = e.target.closest('[data-action="edit"]');
-                    const dup = e.target.closest('[data-action="dup"]');
-                    const archive = e.target.closest('[data-action="archive"]');
+                    const menuBtn = e.target.closest('[data-action="menu"]');
                     const expand = e.target.closest('.expand-toggle');
                     const selBox = e.target.closest('.select-box');
                     const subCheckbox = e.target.closest('.subtask-row .checkbox');
@@ -1330,10 +1416,7 @@
 
                     if (subCheckbox) { this.toggleSubtask(id, subCheckbox.dataset.subid); return; }
                     if (checkbox) { this.toggleTask(id); return; }
-                    if (del) { this.deleteTask(id); return; }
-                    if (edit) { this.openDetailModal(id); return; }
-                    if (dup) { this.duplicateTask(id); return; }
-                    if (archive) { this.archiveTask(id); return; }
+                    if (menuBtn) { e.stopPropagation(); this.openRowMenu(id, menuBtn); return; }
                     if (expand) { this.toggleExpand(id, expand); return; }
                     if (selBox) { this.toggleSelect(id, item); return; }
                 });
@@ -1405,6 +1488,15 @@
                 if (this.selected.has(id)) this.selected.delete(id); else this.selected.add(id);
                 itemEl.classList.toggle('selected');
                 this.renderBulkBar();
+            },
+
+            openRowMenu(id, btn) {
+                Menu.open(btn, [
+                    { label: 'Edit', onClick: () => this.openDetailModal(id) },
+                    { label: 'Duplicate', onClick: () => this.duplicateTask(id) },
+                    { label: 'Archive', onClick: () => this.archiveTask(id) },
+                    { label: 'Delete', danger: true, onClick: () => this.deleteTask(id) }
+                ]);
             },
 
             deleteTask(id, skipConfirm) {
@@ -1622,18 +1714,7 @@
                         </div>
                         <div class="list-item-right">
                             ${priorityBadge}
-                            <button class="delete-btn" type="button" data-action="dup" aria-label="Duplicate task" title="Duplicate">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            </button>
-                            <button class="delete-btn" type="button" data-action="edit" aria-label="Edit task" title="Edit">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </button>
-                            <button class="delete-btn" type="button" data-action="archive" aria-label="Archive task" title="Archive">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
-                            </button>
-                            <button class="delete-btn" type="button" aria-label="Delete task" title="Delete">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
-                            </button>
+                            <button class="delete-btn kebab-btn" type="button" data-action="menu" aria-label="Task options" aria-haspopup="true" title="More options">⋮</button>
                         </div>
                     </div>`;
             },
@@ -1705,18 +1786,12 @@
 
                 this.listEl.addEventListener('click', (e) => {
                     const circle = e.target.closest('.habit-circle');
-                    const del = e.target.closest('[data-action="delete"]');
-                    const edit = e.target.closest('[data-action="edit"]');
-                    const dup = e.target.closest('[data-action="dup"]');
-                    const archive = e.target.closest('[data-action="archive"]');
+                    const menuBtn = e.target.closest('[data-action="menu"]');
                     const row = e.target.closest('.habit-row');
                     if (!row) return;
                     const id = row.dataset.id;
                     if (circle) this.toggleDay(id, circle.dataset.key, circle);
-                    else if (del) this.deleteHabit(id);
-                    else if (edit) this.openHabitModal(id);
-                    else if (dup) this.duplicateHabit(id);
-                    else if (archive) this.archiveHabit(id);
+                    else if (menuBtn) { e.stopPropagation(); this.openRowMenu(id, menuBtn); }
                 });
                 this.listEl.addEventListener('keydown', (e) => {
                     const circle = e.target.closest('.habit-circle');
@@ -1814,6 +1889,15 @@
                 const habit = Store.data.habits.find(h => h.id === id);
                 if (!habit) return;
                 habit.archived = false; Store.save(); this.render();
+            },
+
+            openRowMenu(id, btn) {
+                Menu.open(btn, [
+                    { label: 'Edit', onClick: () => this.openHabitModal(id) },
+                    { label: 'Duplicate', onClick: () => this.duplicateHabit(id) },
+                    { label: 'Archive', onClick: () => this.archiveHabit(id) },
+                    { label: 'Delete', danger: true, onClick: () => this.deleteHabit(id) }
+                ]);
             },
 
             refreshCategoryFilter() {
@@ -1939,18 +2023,7 @@
                         </div>
                         <div class="habit-days">${daysHTML}</div>
                         <div class="habit-actions">
-                            <button class="icon-btn" type="button" data-action="dup" aria-label="Duplicate habit" title="Duplicate">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
-                            </button>
-                            <button class="icon-btn" type="button" data-action="edit" aria-label="Edit habit" title="Edit">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.12 2.12 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </button>
-                            <button class="icon-btn" type="button" data-action="archive" aria-label="Archive habit" title="Archive">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="21 8 21 21 3 21 3 8"></polyline><rect x="1" y="3" width="22" height="5"></rect><line x1="10" y1="12" x2="14" y2="12"></line></svg>
-                            </button>
-                            <button class="delete-btn" type="button" data-action="delete" aria-label="Delete habit" title="Delete" style="opacity:1;">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6M14 11v6"></path></svg>
-                            </button>
+                            <button class="icon-btn kebab-btn" type="button" data-action="menu" aria-label="Habit options" aria-haspopup="true" title="More options">⋮</button>
                         </div>
                     </div>`;
             },
@@ -2808,6 +2881,7 @@
             ThemeModule.apply();
             Toast.init();
             Modal.init();
+            Menu.init();
             CommandPalette.init();
             UI.init();
             TasksModule.init();
