@@ -115,6 +115,7 @@
             display: flex;
             height: 100vh;
             height: 100dvh;
+            height: calc(var(--app-height, 100dvh));
             overflow: hidden;
             overscroll-behavior: none;
             font-size: 15px;
@@ -288,10 +289,13 @@
 
         .empty-state {
             text-align: center; padding: 56px 24px; color: var(--text-secondary); border: 1px dashed var(--border-color);
-            border-radius: var(--radius-md); margin-top: 24px; animation: fadeIn 0.4s ease forwards;
+            border-radius: var(--radius-md); margin-top: 6px; animation: fadeIn 0.4s ease forwards;
         }
         .empty-state .empty-icon { width: 44px; height: 44px; margin: 0 auto 16px; opacity: 0.5; }
         .empty-state strong { display: block; color: var(--text-primary); margin-bottom: 6px; font-size: 1.05rem; }
+        /* Grids using auto-fill (not auto-fit) don't stretch a lone item to fill the row —
+           force the empty-state to span every column so it reads as a full-width banner. */
+        .notes-grid > .empty-state { grid-column: 1 / -1; }
 
         .skeleton {
             border-radius: var(--radius-sm); background: linear-gradient(100deg, var(--border-color) 30%, rgba(255,255,255,0.4) 50%, var(--border-color) 70%);
@@ -326,6 +330,27 @@
         }
         .toolbar-bar select { min-width: 0; flex: none; width: auto; padding: 10px 14px; box-shadow: none; font-size: 0.85rem; }
         .toolbar-bar #task-select-toggle { padding: 10px 16px; min-height: 40px; }
+        #planner-toolbar-toggle {
+            width: 44px; padding: 10px 0; font-size: 1.1rem; font-weight: 700; line-height: 1;
+            flex: none; transition: var(--spring-fast), background 0.25s ease;
+        }
+        #planner-toolbar-toggle[aria-expanded="true"] { background: var(--nav-active-bg); }
+        .planner-toolbar-actions {
+            display: flex; flex-wrap: wrap; gap: 10px; overflow: hidden;
+            max-height: 0; opacity: 0; margin-top: 0; margin-bottom: 0;
+            transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, margin-top 0.4s cubic-bezier(0.22, 1, 0.36, 1), margin-bottom 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+            pointer-events: none;
+        }
+        .planner-toolbar-actions.open {
+            max-height: 260px; opacity: 1; margin-top: -6px; margin-bottom: 20px; pointer-events: auto;
+        }
+        .planner-toolbar-actions.open .btn {
+            animation: popIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+        }
+        .planner-toolbar-actions.open .btn:nth-child(1) { animation-delay: 0.02s; }
+        .planner-toolbar-actions.open .btn:nth-child(2) { animation-delay: 0.06s; }
+        .planner-toolbar-actions.open .btn:nth-child(3) { animation-delay: 0.10s; }
+        .planner-toolbar-actions.open .btn:nth-child(4) { animation-delay: 0.14s; }
         .toolbar-spacer { flex: 1; }
         .search-mini { position: relative; flex: 0 1 260px; min-width: 160px; }
         .search-mini input { width: 100%; padding-left: 38px; box-shadow: none; }
@@ -565,7 +590,7 @@
         /* Planner */
         .timeline { margin-top: 24px; border-left: 2px solid var(--border-color); padding-left: 32px; margin-left: 16px; }
         .time-block {
-            position: relative; margin-bottom: 28px; background: var(--surface-solid); border: 1px solid var(--border-color);
+            position: relative; margin-bottom: 14px; background: var(--surface-solid); border: 1px solid var(--border-color);
             border-radius: var(--radius-md); padding: 18px 20px; box-shadow: var(--shadow-sm); transition: var(--spring);
             animation: popIn 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
         }
@@ -595,8 +620,8 @@
         }
         .insert-slot-btn {
             display: flex; align-items: center; gap: 8px; color: var(--text-secondary); background: none; border: none;
-            cursor: pointer; font-size: 0.78rem; padding: 10px 0 10px 4px; opacity: 0; transition: opacity 0.2s ease; width: 100%;
-            min-height: 40px;
+            cursor: pointer; font-size: 0.78rem; padding: 4px 0 4px 4px; opacity: 0; transition: opacity 0.2s ease; width: 100%;
+            min-height: 28px;
         }
         .timeline:hover .insert-slot-btn, .insert-slot-btn:focus-visible { opacity: 0.7; }
         .insert-slot-btn:hover { opacity: 1 !important; color: var(--text-primary); }
@@ -783,6 +808,9 @@
             .toolbar-bar > .chip { justify-content: center; }
             .toolbar-bar .toolbar-spacer { display: none; }
             .input-group .search-mini { flex: none; width: 100%; max-width: none; min-height: 48px; }
+            .planner-toolbar-actions { flex-direction: column; }
+            .planner-toolbar-actions.open { max-height: 320px; }
+            .planner-toolbar-actions .btn { width: 100%; }
 
             .list-item { padding: 16px 16px; margin-bottom: 10px; }
             .habit-row { padding: 18px; }
@@ -995,10 +1023,12 @@
             </div>
 
             <div class="toolbar-bar">
+                <button class="btn btn-outline btn-sm" id="planner-toolbar-toggle" type="button" aria-expanded="false" aria-controls="planner-toolbar-actions" title="Planner options">+</button>
+            </div>
+            <div class="planner-toolbar-actions" id="planner-toolbar-actions">
                 <button class="btn btn-outline btn-sm" id="planner-add-btn" type="button">+ Add Block</button>
                 <button class="btn btn-outline btn-sm" id="planner-save-template-btn" type="button">Save as Template</button>
                 <button class="btn btn-outline btn-sm" id="planner-templates-btn" type="button">Load Template</button>
-                <div class="toolbar-spacer"></div>
                 <button class="btn btn-outline btn-sm" id="planner-reset-btn" type="button">Reset to Default</button>
             </div>
 
@@ -2746,6 +2776,16 @@
                 this.debouncedSave = Utils.debounce(() => Store.save(), 400);
                 this.render();
 
+                const toggleBtn = document.getElementById('planner-toolbar-toggle');
+                const actionsPanel = document.getElementById('planner-toolbar-actions');
+                toggleBtn.addEventListener('click', () => this.toggleActionsPanel(toggleBtn, actionsPanel));
+                actionsPanel.addEventListener('click', (e) => {
+                    if (!e.target.closest('.btn')) return;
+                    // Give the clicked action a moment to do its thing (e.g. open a modal)
+                    // before the panel collapses back to the compact "+" state.
+                    setTimeout(() => this.toggleActionsPanel(toggleBtn, actionsPanel, false), 180);
+                });
+
                 document.getElementById('planner-add-btn').addEventListener('click', () => this.addBlock());
                 document.getElementById('planner-reset-btn').addEventListener('click', () => {
                     Modal.confirm({
@@ -2818,6 +2858,13 @@
                     e.preventDefault();
                     this.reorder(this.dragId, block.dataset.id);
                 });
+            },
+
+            toggleActionsPanel(toggleBtn, actionsPanel, forceState) {
+                const isOpen = typeof forceState === 'boolean' ? forceState : !actionsPanel.classList.contains('open');
+                actionsPanel.classList.toggle('open', isOpen);
+                toggleBtn.textContent = isOpen ? '\u2212' : '+';
+                toggleBtn.setAttribute('aria-expanded', String(isOpen));
             },
 
             addBlock(afterId) {
@@ -3156,10 +3203,37 @@
 
         /**
          * ==========================================================================
+         * VIEWPORT HEIGHT — real, JS-measured height instead of relying solely on
+         * CSS vh/dvh units. Mobile Safari (both a regular tab and an installed
+         * "Add to Home Screen" app) can report viewport-unit heights that don't match
+         * the actual visible area, which is what left a gap at the bottom. Measuring
+         * window.innerHeight / visualViewport.height directly and re-measuring on every
+         * resize, orientation change, and visualViewport event sidesteps that entirely.
+         * ==========================================================================
+         */
+        const ViewportHeight = {
+            set() {
+                const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+                document.documentElement.style.setProperty('--app-height', h + 'px');
+            },
+            init() {
+                this.set();
+                window.addEventListener('resize', () => this.set());
+                window.addEventListener('orientationchange', () => setTimeout(() => this.set(), 120));
+                if (window.visualViewport) {
+                    window.visualViewport.addEventListener('resize', () => this.set());
+                    window.visualViewport.addEventListener('scroll', () => this.set());
+                }
+            }
+        };
+
+        /**
+         * ==========================================================================
          * BOOTSTRAP
          * ==========================================================================
          */
         document.addEventListener('DOMContentLoaded', () => {
+            ViewportHeight.init();
             Store.init();
             ThemeModule.apply();
             Toast.init();
