@@ -243,6 +243,7 @@
         .nav-item:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 2px; }
 
         .sidebar-footer { padding-top: 16px; border-top: 1px solid var(--border-color); display: flex; gap: 8px; }
+        .mobile-topbar { display: none; }
 
         .section { display: none; }
         .section.active { display: block; animation: fadeIn 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
@@ -327,7 +328,7 @@
         .toolbar-bar select { min-width: 0; flex: none; width: auto; padding: 10px 14px; box-shadow: none; font-size: 0.85rem; }
         .toolbar-bar #task-select-toggle { padding: 10px 16px; min-height: 40px; }
         .toolbar-spacer { flex: 1; }
-        .search-mini { position: relative; flex: 1; min-width: 160px; max-width: 260px; }
+        .search-mini { position: relative; flex: 0 1 260px; min-width: 160px; }
         .search-mini input { width: 100%; padding-left: 38px; box-shadow: none; }
         .search-mini svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; color: var(--text-secondary); pointer-events: none; }
 
@@ -354,8 +355,11 @@
             touch-action: none; overflow: hidden; margin-top: 1px; -webkit-tap-highlight-color: transparent;
             box-shadow: inset 0 1px 3px rgba(0,0,0,0.07), inset 0 -1px 0 rgba(255,255,255,0.15);
             transition: background 0.4s cubic-bezier(0.22,1,0.36,1), border-color 0.4s cubic-bezier(0.22,1,0.36,1), box-shadow 0.3s ease;
+            outline: none;
         }
-        .task-slider:focus-visible { outline: 2px solid var(--text-primary); outline-offset: 3px; }
+        /* Focus ring uses box-shadow (which respects border-radius) instead of outline (which renders
+           as a hard rectangle in most browsers and was the visible "white box" artifact around the slider). */
+        .task-slider:focus-visible { box-shadow: 0 0 0 3px var(--nav-active-bg), 0 0 0 5px var(--text-secondary), inset 0 1px 3px rgba(0,0,0,0.07); }
         .task-slider-fill {
             position: absolute; inset: 0; opacity: 0;
             background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
@@ -365,14 +369,14 @@
         .task-slider.checked .task-slider-fill { opacity: 1; }
         .task-slider-knob {
             position: absolute; top: 2px; left: 2px; width: 24px; height: 24px; border-radius: 50%;
-            background: linear-gradient(150deg, rgba(255,255,255,0.98), rgba(255,255,255,0.7));
-            backdrop-filter: blur(8px) saturate(180%); -webkit-backdrop-filter: blur(8px) saturate(180%);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.22), 0 0 0 1px rgba(255,255,255,0.5) inset, 0 -3px 4px rgba(0,0,0,0.06) inset;
+            background: linear-gradient(150deg, rgba(255,255,255,0.98), rgba(255,255,255,0.78));
+            box-shadow: 0 2px 5px rgba(0,0,0,0.22), 0 -2px 3px rgba(0,0,0,0.05) inset;
             transition: transform 0.42s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease, width 0.15s ease, height 0.15s ease, top 0.15s ease, left 0.15s ease;
             display: flex; align-items: center; justify-content: center;
+            will-change: transform; backface-visibility: hidden;
         }
-        :root[data-theme="dark"] .task-slider-knob { background: linear-gradient(150deg, rgba(255,255,255,0.45), rgba(255,255,255,0.15)); }
-        .task-slider.checked .task-slider-knob { transform: translateX(26px); box-shadow: 0 2px 8px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.55) inset, 0 0 14px 1px rgba(255,255,255,0.4); }
+        :root[data-theme="dark"] .task-slider-knob { background: linear-gradient(150deg, rgba(255,255,255,0.5), rgba(255,255,255,0.22)); }
+        .task-slider.checked .task-slider-knob { transform: translateX(26px); box-shadow: 0 2px 7px rgba(0,0,0,0.28), 0 0 9px 0 rgba(255,255,255,0.4); }
         .task-slider-knob::after {
             content: ''; width: 8px; height: 5px; border-left: 2px solid var(--accent-color); border-bottom: 2px solid var(--accent-color);
             transform: rotate(-45deg) scale(0); opacity: 0; margin-top: -1px;
@@ -725,10 +729,16 @@
 
         @media (max-width: 768px) {
             body { flex-direction: column; }
+
+            /* The nav is now a normal flex child (order 2) instead of position:fixed. Fixed-position
+               bottom bars combined with mobile browsers' dynamic viewport (address bar show/hide)
+               are what caused the empty gap between the bar and the screen edge; as a real flex
+               item sized by content, it always sits flush against the true bottom of the layout. */
             .sidebar {
-                width: 100%; height: calc(74px + var(--safe-bottom)); padding: 0 12px; padding-bottom: var(--safe-bottom);
+                width: 100%; padding: 4px 12px; padding-bottom: max(6px, var(--safe-bottom));
                 border-right: none; border-top: 1px solid var(--border-color); flex-direction: row; align-items: center;
-                justify-content: space-between; position: fixed; bottom: 0; left: 0; background: var(--surface-blur); z-index: 200;
+                justify-content: space-between; position: static; order: 2; flex-shrink: 0;
+                background: var(--surface-blur); z-index: 200; height: auto; min-height: 64px;
             }
             .logo, .sidebar-footer { display: none; }
             nav { display: flex; width: 100%; justify-content: space-between; align-items: center; position: relative; overflow: visible; }
@@ -741,7 +751,19 @@
             .nav-item.active span { font-weight: 700; }
             .nav-indicator { background: var(--nav-active-bg); border-radius: var(--radius-md); box-shadow: none; border: none; }
 
-            .main-content { padding: calc(28px + var(--safe-top)) 20px calc(104px + var(--safe-bottom)) 20px; }
+            /* Top bar: hosts Search & Settings on mobile, since the sidebar footer that normally
+               holds them is hidden on small screens. Sits before main-content in flex order. */
+            .mobile-topbar {
+                display: flex; align-items: center; justify-content: space-between;
+                padding: calc(12px + var(--safe-top)) 16px 12px 16px;
+                background: var(--surface-blur); backdrop-filter: blur(24px) saturate(180%); -webkit-backdrop-filter: blur(24px) saturate(180%);
+                border-bottom: 1px solid var(--border-color); flex-shrink: 0; order: 0; z-index: 150;
+            }
+            .mobile-topbar-title { font-weight: 700; font-size: 1.05rem; letter-spacing: -0.04em; }
+            .mobile-topbar-actions { display: flex; gap: 2px; }
+            .mobile-topbar-actions .icon-btn { min-width: 40px; min-height: 40px; }
+
+            .main-content { padding: 24px 20px 28px 20px; order: 1; }
 
             h1 { font-size: 1.9rem; margin-bottom: 10px; }
             h2 { font-size: 1.35rem; margin-top: 28px; margin-bottom: 14px; }
@@ -752,8 +774,16 @@
             .input-group { flex-direction: column; gap: 10px; margin-bottom: 24px; }
             .input-group input, .input-group select, .input-group button { width: 100%; }
             .field-row { flex-direction: column; }
-            .toolbar-bar { gap: 8px; margin-bottom: 18px; }
-            .toolbar-bar select, .toolbar-bar #task-select-toggle { min-height: 42px; }
+
+            /* Toolbar controls stack full-width so nothing (like the search field) can drift
+               left/right — each control gets identical, symmetric spacing. */
+            .toolbar-bar { flex-direction: column; align-items: stretch; gap: 10px; margin-bottom: 18px; }
+            .toolbar-bar > * {
+                width: 100%; max-width: none; flex: none; min-height: 44px;
+            }
+            .toolbar-bar > .chip { justify-content: center; }
+            .toolbar-bar .toolbar-spacer { display: none; }
+            .input-group .search-mini { width: 100%; max-width: none; }
 
             .list-item { padding: 16px 16px; margin-bottom: 10px; }
             .habit-row { padding: 18px; }
@@ -776,8 +806,9 @@
         }
 
         @media (max-width: 900px) and (max-height: 500px) and (orientation: landscape) {
-            .sidebar { height: 60px; }
-            .main-content { padding-bottom: 76px; }
+            .sidebar { min-height: 52px; }
+            .nav-item { min-height: 40px; padding: 4px; }
+            .mobile-topbar { padding-top: calc(6px + var(--safe-top)); padding-bottom: 6px; }
         }
 
         @media (min-resolution: 2dppx) {
@@ -786,6 +817,18 @@
     </style>
 </head>
 <body>
+
+    <header class="mobile-topbar" id="mobile-topbar">
+        <span class="mobile-topbar-title">Onyx</span>
+        <div class="mobile-topbar-actions">
+            <button class="icon-btn" id="search-open-btn-mobile" type="button" title="Search" aria-label="Open search">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </button>
+            <button class="icon-btn" id="settings-open-btn-mobile" type="button" title="Settings" aria-label="Open settings">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+            </button>
+        </div>
+    </header>
 
     <aside class="sidebar">
         <div class="logo">
@@ -1241,7 +1284,7 @@
 
         const DEFAULT_PLANNER_BLOCKS = () => (
             ['06:00', '08:00', '10:00', '12:00', '14:00', '16:00', '18:00', '20:00', '22:00'].map((t, i) => ({
-                id: Utils.uid(), time: t, endTime: addHoursToTime(t, 2), label: '', note: '', done: false, order: i
+                id: Utils.uid(), time: t, endTime: addHoursToTime(t, 2), endManuallySet: false, label: '', note: '', done: false, order: i
             }))
         );
 
@@ -1258,6 +1301,10 @@
                         const parsed = JSON.parse(saved);
                         this.data = Object.assign({ tasks: [], habits: [], goals: [], notes: [], planner: { blocks: [], templates: [] }, settings: { theme: 'system' } }, parsed);
                         if (!this.data.planner.blocks || !this.data.planner.blocks.length) this.data.planner.blocks = DEFAULT_PLANNER_BLOCKS();
+                        else this.data.planner.blocks.forEach(b => {
+                            if (typeof b.endManuallySet !== 'boolean') b.endManuallySet = !!b.endTime;
+                            if (!b.endTime && b.time) b.endTime = addHoursToTime(b.time, 2);
+                        });
                         if (!this.data.planner.templates) this.data.planner.templates = [];
                         if (!this.data.settings) this.data.settings = { theme: 'system' };
                         return;
@@ -1372,6 +1419,8 @@
                 document.getElementById('open-planner-btn').addEventListener('click', () => this.selectTab(document.querySelector('[data-target="planner"]')));
                 document.getElementById('search-open-btn').addEventListener('click', () => CommandPalette.open());
                 document.getElementById('settings-open-btn').addEventListener('click', () => SettingsModule.open());
+                document.getElementById('search-open-btn-mobile').addEventListener('click', () => CommandPalette.open());
+                document.getElementById('settings-open-btn-mobile').addEventListener('click', () => SettingsModule.open());
 
                 requestAnimationFrame(() => this.updateIndicator(this.activeItem, true));
 
@@ -2715,14 +2764,15 @@
                     else if (target.classList.contains('time-note-input')) b.note = target.value;
                     else if (target.dataset.field === 'start') {
                         b.time = target.value;
-                        // Keep end time populated and after the new start so the field never looks blank/broken.
-                        if (b.time && (!b.endTime || b.endTime <= b.time)) {
-                            b.endTime = addHoursToTime(b.time, 1);
+                        // Auto-follow the start time by 2 hours, unless the person has manually
+                        // set a custom end time for this block — that choice is preserved.
+                        if (b.time && !b.endManuallySet) {
+                            b.endTime = addHoursToTime(b.time, 2);
                             const endInput = block.querySelector('[data-field="end"]');
                             if (endInput) endInput.value = b.endTime;
                         }
                     }
-                    else if (target.dataset.field === 'end') b.endTime = target.value;
+                    else if (target.dataset.field === 'end') { b.endTime = target.value; b.endManuallySet = true; }
                     this.debouncedSave();
                 });
 
@@ -2774,9 +2824,9 @@
                 if (afterId) {
                     const prev = blocks.find(b => b.id === afterId);
                     if (prev && prev.endTime) start = prev.endTime;
-                    else if (prev && prev.time) start = addHoursToTime(prev.time, 1);
+                    else if (prev && prev.time) start = addHoursToTime(prev.time, 2);
                 }
-                const newBlock = { id: Utils.uid(), time: start, endTime: addHoursToTime(start, 1), label: '', note: '', done: false };
+                const newBlock = { id: Utils.uid(), time: start, endTime: addHoursToTime(start, 2), endManuallySet: false, label: '', note: '', done: false };
                 if (afterId) {
                     const idx = blocks.findIndex(b => b.id === afterId);
                     blocks.splice(idx + 1, 0, newBlock);
@@ -2982,7 +3032,7 @@
                     modalEl.querySelector('#reset-data').addEventListener('click', () => {
                         Modal.open(`
                             <h2>Reset all data?</h2>
-                            <p class="sub">This permanently deletes all tasks, habits, goals, notes, and planner data, and restores default settings. This cannot be undone.</p>
+                            <p class="sub">This permanently deletes all tasks, habits (and their streaks/history), goals, notes, and planner data, and restores every setting to its fresh-install default. This cannot be undone.</p>
                             <div class="modal-actions">
                                 <button class="btn btn-outline" id="reset-cancel" type="button">Cancel</button>
                                 <button class="btn btn-danger" id="reset-confirm" type="button">Erase Everything</button>
@@ -2993,12 +3043,42 @@
                                 const empty = {
                                     tasks: [], habits: [], goals: [], notes: [],
                                     planner: { blocks: DEFAULT_PLANNER_BLOCKS(), templates: [] },
-                                    settings: { theme: (Store.data.settings && Store.data.settings.theme) || 'system' }
+                                    settings: { theme: 'system' }
                                 };
                                 try {
                                     localStorage.setItem('onyx_data_v4', JSON.stringify(empty));
                                     localStorage.removeItem('onyx_data_v3');
                                 } catch (e) { console.warn('Onyx: reset could not write to storage.', e); }
+
+                                // Reset in-memory state and every module's UI back to a fresh-install
+                                // state, then re-render everything in place — no page reload needed.
+                                Store.data = empty;
+                                ThemeModule.apply();
+
+                                TasksModule.selected.clear();
+                                TasksModule.expanded.clear();
+                                TasksModule.selectMode = false;
+                                TasksModule.filters = { status: 'all', priority: '', search: '', sort: 'created' };
+                                document.getElementById('task-select-toggle')?.classList.remove('active');
+                                const taskSearchEl = document.getElementById('task-search'); if (taskSearchEl) taskSearchEl.value = '';
+                                const taskStatusEl = document.getElementById('task-filter-status'); if (taskStatusEl) taskStatusEl.value = 'all';
+                                const taskPriorityEl = document.getElementById('task-filter-priority'); if (taskPriorityEl) taskPriorityEl.value = '';
+                                const taskSortEl = document.getElementById('task-sort'); if (taskSortEl) taskSortEl.value = 'created';
+
+                                HabitsModule.filterCategory = '';
+                                const habitCatEl = document.getElementById('habit-filter-category'); if (habitCatEl) habitCatEl.value = '';
+
+                                NotesModule.currentFolder = 'All';
+                                NotesModule.currentTag = '';
+                                NotesModule.search = '';
+                                const noteSearchEl = document.getElementById('note-search'); if (noteSearchEl) noteSearchEl.value = '';
+
+                                Store.save();
+                                TasksModule.render();
+                                HabitsModule.render();
+                                GoalsModule.render();
+                                NotesModule.render();
+                                PlannerModule.render();
 
                                 Modal.open(`
                                     <div style="text-align:center; padding: 12px 0 4px;">
@@ -3006,9 +3086,14 @@
                                             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                         </div>
                                         <h2 style="margin-top: 20px;">All data cleared</h2>
-                                        <p class="sub" style="margin-bottom: 0;">Restoring Onyx to a fresh start…</p>
-                                    </div>`);
-                                setTimeout(() => location.reload(), 1000);
+                                        <p class="sub" style="margin-bottom: 0;">Onyx is back to a fresh start.</p>
+                                        <div class="modal-actions" style="justify-content: center;">
+                                            <button class="btn" id="reset-done" type="button">Done</button>
+                                        </div>
+                                    </div>`, { onOpen: (doneEl) => {
+                                        doneEl.querySelector('#reset-done').addEventListener('click', () => Modal.close());
+                                    }});
+                                setTimeout(() => Modal.close(), 1800);
                             });
                         }});
                     });
