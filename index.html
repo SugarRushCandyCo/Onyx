@@ -102,38 +102,27 @@
             -webkit-text-size-adjust: 100%;
             background-color: var(--bg-color);
             height: 100%;
+            overflow: hidden;
+            overscroll-behavior: none;
             transition: background-color 0.4s ease;
         }
 
         body {
-    margin: 0;
-    padding: 0;
-
-    font-family: var(--font-stack);
-    background-color: var(--bg-color);
-    color: var(--text-primary);
-    line-height: 1.6;
-
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-
-    display: flex;
-
-    /* FIX: use modern viewport units only */
-    height: 100dvh;
-    min-height: 100dvh;
-
-    /* safety fallback */
-    height: -webkit-fill-available;
-
-    overflow: hidden;
-    overscroll-behavior: none;
-
-    font-size: 15px;
-    -webkit-tap-highlight-color: transparent;
-
-    transition: background-color 0.4s ease, color 0.4s ease;
-}
+            font-family: var(--font-stack);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            text-rendering: optimizeLegibility;
+            display: flex;
+            position: fixed;
+            inset: 0;
+            overflow: hidden;
+            overscroll-behavior: none;
+            font-size: 15px;
+            -webkit-tap-highlight-color: transparent;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
 
         @media (prefers-reduced-motion: reduce) {
             *, *::before, *::after {
@@ -341,28 +330,28 @@
             display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 20px;
         }
         .toolbar-bar select { min-width: 0; flex: none; width: auto; padding: 10px 14px; box-shadow: none; font-size: 0.85rem; }
-        .toolbar-bar #task-select-toggle { padding: 10px 16px; min-height: 40px; }
-        #planner-toolbar-toggle {
+        #task-select-toggle { padding: 10px 16px; min-height: 40px; }
+        .toolbar-popup-toggle {
             width: 44px; padding: 10px 0; font-size: 1.1rem; font-weight: 700; line-height: 1;
             flex: none; transition: var(--spring-fast), background 0.25s ease;
         }
-        #planner-toolbar-toggle[aria-expanded="true"] { background: var(--nav-active-bg); }
-        .planner-toolbar-actions {
-            display: flex; flex-wrap: wrap; gap: 10px; overflow: hidden;
+        .toolbar-popup-toggle[aria-expanded="true"] { background: var(--nav-active-bg); }
+        .toolbar-popup-panel {
+            display: flex; flex-wrap: wrap; align-items: center; gap: 10px; overflow: hidden;
             max-height: 0; opacity: 0; margin-top: 0; margin-bottom: 0;
             transition: max-height 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease, margin-top 0.4s cubic-bezier(0.22, 1, 0.36, 1), margin-bottom 0.4s cubic-bezier(0.22, 1, 0.36, 1);
             pointer-events: none;
         }
-        .planner-toolbar-actions.open {
+        .toolbar-popup-panel.open {
             max-height: 260px; opacity: 1; margin-top: -6px; margin-bottom: 20px; pointer-events: auto;
         }
-        .planner-toolbar-actions.open .btn {
+        .toolbar-popup-panel.open > * {
             animation: popIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) backwards;
         }
-        .planner-toolbar-actions.open .btn:nth-child(1) { animation-delay: 0.02s; }
-        .planner-toolbar-actions.open .btn:nth-child(2) { animation-delay: 0.06s; }
-        .planner-toolbar-actions.open .btn:nth-child(3) { animation-delay: 0.10s; }
-        .planner-toolbar-actions.open .btn:nth-child(4) { animation-delay: 0.14s; }
+        .toolbar-popup-panel.open > *:nth-child(1) { animation-delay: 0.02s; }
+        .toolbar-popup-panel.open > *:nth-child(2) { animation-delay: 0.06s; }
+        .toolbar-popup-panel.open > *:nth-child(3) { animation-delay: 0.10s; }
+        .toolbar-popup-panel.open > *:nth-child(4) { animation-delay: 0.14s; }
         .toolbar-spacer { flex: 1; }
         .search-mini { position: relative; flex: 0 1 260px; min-width: 160px; }
         .search-mini input { width: 100%; padding-left: 38px; box-shadow: none; }
@@ -817,12 +806,17 @@
             .toolbar-bar > * {
                 width: 100%; max-width: none; flex: none; min-height: 44px;
             }
-            .toolbar-bar > .chip { justify-content: center; }
+            .toolbar-bar > .chip, .toolbar-popup-panel > .chip { justify-content: center; }
             .toolbar-bar .toolbar-spacer { display: none; }
+            /* Toolbars that host a +/- popup toggle stay compact side-by-side (row),
+               since stacking them would waste the vertical space the toggle exists to save. */
+            .toolbar-bar:has(.toolbar-popup-toggle) { flex-direction: row; align-items: center; }
+            .toolbar-bar:has(.toolbar-popup-toggle) > select { flex: 1; width: auto; min-height: 44px; }
+            .toolbar-bar:has(.toolbar-popup-toggle) > .toolbar-popup-toggle { flex: none; width: 44px; min-height: 44px; }
             .input-group .search-mini { flex: none; width: 100%; max-width: none; min-height: 48px; }
-            .planner-toolbar-actions { flex-direction: column; }
-            .planner-toolbar-actions.open { max-height: 320px; }
-            .planner-toolbar-actions .btn { width: 100%; }
+            .toolbar-popup-panel { flex-direction: column; align-items: stretch; }
+            .toolbar-popup-panel.open { max-height: 360px; }
+            .toolbar-popup-panel > * { width: 100%; }
 
             .list-item { padding: 16px 16px; margin-bottom: 10px; }
             .habit-row { padding: 18px; }
@@ -996,6 +990,15 @@
             </div>
 
             <div class="toolbar-bar">
+                <select id="task-sort" aria-label="Sort tasks">
+                    <option value="created">Newest</option>
+                    <option value="due">Due Date</option>
+                    <option value="priority">Priority</option>
+                    <option value="az">A–Z</option>
+                </select>
+                <button class="btn btn-outline btn-sm toolbar-popup-toggle" id="task-toolbar-toggle" type="button" aria-expanded="false" aria-controls="task-toolbar-actions" title="Filter & search options">+</button>
+            </div>
+            <div class="toolbar-popup-panel" id="task-toolbar-actions">
                 <select id="task-filter-status" aria-label="Filter by status">
                     <option value="all">All</option>
                     <option value="active">Active</option>
@@ -1007,14 +1010,7 @@
                     <option value="Normal">Normal</option>
                     <option value="Low">Low</option>
                 </select>
-                <select id="task-sort" aria-label="Sort tasks">
-                    <option value="created">Newest</option>
-                    <option value="due">Due Date</option>
-                    <option value="priority">Priority</option>
-                    <option value="az">A–Z</option>
-                </select>
                 <button class="chip" id="task-select-toggle" type="button">Select</button>
-                <div class="toolbar-spacer"></div>
                 <div class="search-mini">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                     <input type="search" id="task-search" placeholder="Search tasks..." aria-label="Search tasks">
@@ -1035,9 +1031,9 @@
             </div>
 
             <div class="toolbar-bar">
-                <button class="btn btn-outline btn-sm" id="planner-toolbar-toggle" type="button" aria-expanded="false" aria-controls="planner-toolbar-actions" title="Planner options">+</button>
+                <button class="btn btn-outline btn-sm toolbar-popup-toggle" id="planner-toolbar-toggle" type="button" aria-expanded="false" aria-controls="planner-toolbar-actions" title="Planner options">+</button>
             </div>
-            <div class="planner-toolbar-actions" id="planner-toolbar-actions">
+            <div class="toolbar-popup-panel" id="planner-toolbar-actions">
                 <button class="btn btn-outline btn-sm" id="planner-add-btn" type="button">+ Add Block</button>
                 <button class="btn btn-outline btn-sm" id="planner-save-template-btn" type="button">Save as Template</button>
                 <button class="btn btn-outline btn-sm" id="planner-templates-btn" type="button">Load Template</button>
@@ -1313,6 +1309,29 @@
 
         /**
          * ==========================================================================
+         * TOOLBAR POPUP — shared "+/−" expand-collapse behavior for a toggle button
+         * and its associated panel of controls (used by Planner and Tasks toolbars).
+         * ==========================================================================
+         */
+        const ToolbarPopup = {
+            toggle(toggleBtn, panelEl, forceState) {
+                const isOpen = typeof forceState === 'boolean' ? forceState : !panelEl.classList.contains('open');
+                panelEl.classList.toggle('open', isOpen);
+                toggleBtn.textContent = isOpen ? '\u2212' : '+';
+                toggleBtn.setAttribute('aria-expanded', String(isOpen));
+            },
+            // Auto-collapses the panel shortly after any control inside it is used,
+            // so it behaves like a menu that closes once you've made your choice.
+            bindAutoCollapse(panelEl, toggleBtn) {
+                panelEl.addEventListener('click', (e) => {
+                    if (!e.target.closest('.btn, .chip')) return;
+                    setTimeout(() => this.toggle(toggleBtn, panelEl, false), 180);
+                });
+            }
+        };
+
+        /**
+         * ==========================================================================
          * STORE — persistence layer
          * ==========================================================================
          */
@@ -1577,6 +1596,11 @@
                 document.getElementById('task-sort').addEventListener('change', (e) => { this.filters.sort = e.target.value; this.render(); });
                 document.getElementById('task-search').addEventListener('input', Utils.debounce((e) => { this.filters.search = e.target.value.toLowerCase(); this.render(); }, 200));
                 document.getElementById('task-select-toggle').addEventListener('click', () => this.toggleSelectMode());
+
+                const taskToggleBtn = document.getElementById('task-toolbar-toggle');
+                const taskActionsPanel = document.getElementById('task-toolbar-actions');
+                taskToggleBtn.addEventListener('click', () => ToolbarPopup.toggle(taskToggleBtn, taskActionsPanel));
+                ToolbarPopup.bindAutoCollapse(taskActionsPanel, taskToggleBtn);
 
                 // Dragging the liquid-glass slider is handled separately (pointer capture), since
                 // it needs continuous move tracking rather than a single click.
@@ -2790,13 +2814,8 @@
 
                 const toggleBtn = document.getElementById('planner-toolbar-toggle');
                 const actionsPanel = document.getElementById('planner-toolbar-actions');
-                toggleBtn.addEventListener('click', () => this.toggleActionsPanel(toggleBtn, actionsPanel));
-                actionsPanel.addEventListener('click', (e) => {
-                    if (!e.target.closest('.btn')) return;
-                    // Give the clicked action a moment to do its thing (e.g. open a modal)
-                    // before the panel collapses back to the compact "+" state.
-                    setTimeout(() => this.toggleActionsPanel(toggleBtn, actionsPanel, false), 180);
-                });
+                toggleBtn.addEventListener('click', () => ToolbarPopup.toggle(toggleBtn, actionsPanel));
+                ToolbarPopup.bindAutoCollapse(actionsPanel, toggleBtn);
 
                 document.getElementById('planner-add-btn').addEventListener('click', () => this.addBlock());
                 document.getElementById('planner-reset-btn').addEventListener('click', () => {
@@ -2870,13 +2889,6 @@
                     e.preventDefault();
                     this.reorder(this.dragId, block.dataset.id);
                 });
-            },
-
-            toggleActionsPanel(toggleBtn, actionsPanel, forceState) {
-                const isOpen = typeof forceState === 'boolean' ? forceState : !actionsPanel.classList.contains('open');
-                actionsPanel.classList.toggle('open', isOpen);
-                toggleBtn.textContent = isOpen ? '\u2212' : '+';
-                toggleBtn.setAttribute('aria-expanded', String(isOpen));
             },
 
             addBlock(afterId) {
@@ -3215,37 +3227,10 @@
 
         /**
          * ==========================================================================
-         * VIEWPORT HEIGHT — real, JS-measured height instead of relying solely on
-         * CSS vh/dvh units. Mobile Safari (both a regular tab and an installed
-         * "Add to Home Screen" app) can report viewport-unit heights that don't match
-         * the actual visible area, which is what left a gap at the bottom. Measuring
-         * window.innerHeight / visualViewport.height directly and re-measuring on every
-         * resize, orientation change, and visualViewport event sidesteps that entirely.
-         * ==========================================================================
-         */
-        const ViewportHeight = {
-            set() {
-                const h = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
-                document.documentElement.style.setProperty('--app-height', h + 'px');
-            },
-            init() {
-                this.set();
-                window.addEventListener('resize', () => this.set());
-                window.addEventListener('orientationchange', () => setTimeout(() => this.set(), 120));
-                if (window.visualViewport) {
-                    window.visualViewport.addEventListener('resize', () => this.set());
-                    window.visualViewport.addEventListener('scroll', () => this.set());
-                }
-            }
-        };
-
-        /**
-         * ==========================================================================
          * BOOTSTRAP
          * ==========================================================================
          */
         document.addEventListener('DOMContentLoaded', () => {
-            ViewportHeight.init();
             Store.init();
             ThemeModule.apply();
             Toast.init();
